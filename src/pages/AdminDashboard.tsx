@@ -235,12 +235,15 @@ export default function AdminDashboard() {
                     {order.items.map((i, k) => (
                       <div key={k} className="flex justify-between items-center bg-background border p-1.5 rounded-lg">
                         <span className="text-muted-foreground truncate mr-2">{i.menuItem.name}</span>
-                        <span className="font-bold bg-muted px-1.5 py-0.5 rounded shadow-sm">x{i.quantity}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold bg-muted px-1.5 py-0.5 rounded shadow-sm text-[10px]">x{i.quantity}</span>
+                          <span className="font-bold text-primary text-[10px]">৳{i.menuItem.price * i.quantity}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t">
-                    <span className="font-bold text-base text-primary">৳{order.total}</span>
+                    <span className="font-bold text-sm text-primary">Total: ৳{order.total}</span>
                     <div className="flex gap-1.5">
                       {order.status === "pending" && (
                         <>
