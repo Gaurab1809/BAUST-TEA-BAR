@@ -201,7 +201,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
     await updateDoc(doc(db, "orders", orderId), { status: "cancelled" });
     await updateMonthlyBill(o.userId, o.userName, o.total, o.date, true);
-    addNotification({ title: "Order Rejected", message: "An order has been rejected by admin.", type: "order", targetUserId: o.userId, read: false });
+    addNotification({ title: "Order Cancelled", message: `Your order for ${o.dayName} (৳${o.total}) has been cancelled by the admin.`, type: "order", targetUserId: o.userId, read: false });
   }, [orders, addNotification]);
 
   const completeOrder = useCallback((orderId: string) => {
