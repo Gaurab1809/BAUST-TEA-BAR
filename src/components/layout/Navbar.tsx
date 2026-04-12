@@ -17,7 +17,7 @@ export function Navbar() {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
 
   const relevantNotifications = notifications.filter(n => 
-    isAdmin || n.type === "announcement" || n.targetUserId === user?.id
+    isAdmin || n.type === "announcement" || (n.targetUserId && n.targetUserId === user?.id)
   );
   const unreadCount = relevantNotifications.filter(n => !n.read).length;
 

@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userDocRef = doc(db, "users", firebaseUser.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
-          const userData = userDoc.data() as User;
+          const userData = { id: firebaseUser.uid, ...userDoc.data() } as User;
           setUser(userData);
           saveSessionUser(userData);
           
@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userDoc = await getDoc(userDocRef);
       
       if (userDoc.exists()) {
-        const userData = userDoc.data() as User;
+        const userData = { id: userCredential.user.uid, ...userDoc.data() } as User;
         setUser(userData);
         saveSessionUser(userData);
         
