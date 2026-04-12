@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Bell, LogOut, Menu, Moon, Sun, User, X, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,12 @@ export function Navbar() {
     isAdmin || n.type === "announcement" || n.targetUserId === user?.id
   );
   const unreadCount = relevantNotifications.filter(n => !n.read).length;
+
+  useEffect(() => {
+    const syncTheme = () => setDark(document.documentElement.classList.contains("dark"));
+    window.addEventListener("theme-changed", syncTheme);
+    return () => window.removeEventListener("theme-changed", syncTheme);
+  }, []);
 
   const toggleTheme = () => {
     const next = !dark;
