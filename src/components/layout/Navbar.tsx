@@ -10,11 +10,16 @@ import logo from "@/assets/logo.png";
 
 export function Navbar() {
   const { user, isAdmin, logout, isAuthenticated } = useAuth();
-  const { unreadCount } = useAppState();
+  const { notifications } = useAppState();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
+
+  const relevantNotifications = notifications.filter(n => 
+    isAdmin || n.type === "announcement" || n.targetUserId === user?.id
+  );
+  const unreadCount = relevantNotifications.filter(n => !n.read).length;
 
   const toggleTheme = () => {
     const next = !dark;
@@ -45,7 +50,7 @@ export function Navbar() {
       <div className="container flex h-14 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">
           <img src={logo} alt="BAUST Tea Bar" className="h-8 w-8" />
-          <span className="font-heading text-lg font-bold text-primary hidden sm:inline">BAUST Tea Bar</span>
+          <span className="font-heading text-lg font-bold text-primary">BAUST Tea Bar</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">

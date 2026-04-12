@@ -3,11 +3,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAppState } from "@/lib/app-state";
+import { useAuth } from "@/lib/auth-context";
 
 const icons = { order: UtensilsCrossed, payment: CreditCard, menu: Bell, announcement: Megaphone };
 
 export default function Notifications() {
-  const { notifications, markNotificationRead, markAllNotificationsRead, unreadCount } = useAppState();
+  const { user, isAdmin } = useAuth();
+  const { notifications, markNotificationRead, markAllNotificationsRead } = useAppState();
+
+  const userNotifications = notifications.filter(n =>
+    isAdmin || n.type === "announcement" || n.targetUserId === user?.id
+  );
+  const unreadCount = userNotifications.filter(n => !n.read).length;
 
   return (
     <div className="container max-w-3xl py-6 px-4 animate-fade-in">
@@ -17,17 +24,17 @@ export default function Notifications() {
           <p className="text-muted-foreground text-sm mt-1">{unreadCount} unread</p>
         </div>
         {unreadCount > 0 && (
-          <Button variant="outline" size="sm" onClick={markAllNotificationsRead}>
+          <Button variant="outline" size="sm" onClick={() => markAllNotificationsRead(userNotifications.filter(n => !n.read).map(n => n.id))}>
             <CheckCheck className="h-4 w-4 mr-1" /> Mark all read
           </Button>
         )}
       </div>
 
-      {notifications.length === 0 ? (
+      {userNotifications.length === 0 ? (
         <p className="text-muted-foreground text-center py-12">No notifications yet.</p>
       ) : (
         <div className="flex flex-col gap-3">
-          {notifications.map(n => {
+          {userNotifications.map(n => {
             const Icon = icons[n.type];
             return (
               <Card

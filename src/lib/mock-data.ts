@@ -65,6 +65,7 @@ export interface Notification {
   title: string;
   message: string;
   type: "order" | "payment" | "menu" | "announcement";
+  targetUserId?: string;
   read: boolean;
   createdAt: string;
 }
@@ -91,8 +92,8 @@ export const SAMPLE_BILLS: MonthlyBill[] = [
 ];
 
 export const SAMPLE_NOTIFICATIONS: Notification[] = [
-  { id: "n1", title: "Order Confirmed", message: "Your order for Sunday has been confirmed by admin.", type: "order", read: false, createdAt: "2026-04-11T12:00:00Z" },
-  { id: "n2", title: "Monthly Bill Generated", message: "Your March 2026 bill of ৳850 has been generated.", type: "payment", read: false, createdAt: "2026-04-01T08:00:00Z" },
+  { id: "n1", title: "Order Confirmed", message: "Your order for Sunday has been confirmed by admin.", type: "order", targetUserId: "u1", read: false, createdAt: "2026-04-11T12:00:00Z" },
+  { id: "n2", title: "Monthly Bill Generated", message: "Your March 2026 bill of ৳850 has been generated.", type: "payment", targetUserId: "u1", read: false, createdAt: "2026-04-01T08:00:00Z" },
   { id: "n3", title: "New Menu Item", message: "Puri with Chana has been added to Monday menu!", type: "menu", read: true, createdAt: "2026-03-28T10:00:00Z" },
 ];
 

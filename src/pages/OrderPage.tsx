@@ -74,7 +74,7 @@ export default function OrderPage() {
     if (isBlocked) { toast.error("Ordering blocked by admin"); return; }
     if (!user) return;
     placeOrder(user.id, user.name, cart, dateStr, selectedDay.dayName);
-    toast.success(`Order dispatched for ${selectedDay.dayName}!`);
+    toast.success(`Order placed for ${selectedDay.dayName}!`);
     setCart([]);
     setCartOpen(false);
   };
@@ -98,10 +98,10 @@ export default function OrderPage() {
         <Sheet open={cartOpen} onOpenChange={setCartOpen}>
           <SheetTrigger asChild>
              {/* ... cart button ... */}
-            <Button className="rounded-full shadow-md w-full sm:w-auto h-11 px-6 bg-foreground text-background transition-transform active:scale-95">
-              <ShoppingCart className="h-4 w-4 mr-2" /> 
-              <span className="font-bold text-sm">View Cart</span>
-              {cartCount > 0 && <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs bg-primary text-primary-foreground border-none">{cartCount}</Badge>}
+            <Button className="fixed bottom-6 right-6 z-50 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] h-14 w-14 sm:w-auto sm:px-6 bg-gradient-to-r from-primary to-accent text-primary-foreground transition-all hover:scale-105 active:scale-95 border-none dark:shadow-[0_8px_30px_rgba(255,255,255,0.1)] focus:outline-none">
+              <ShoppingCart className="h-6 w-6 sm:h-5 sm:w-5 sm:mr-2" /> 
+              <span className="font-bold text-sm hidden sm:inline">View Cart</span>
+              {cartCount > 0 && <Badge className="absolute -top-2 -right-2 h-6 w-6 p-0 flex items-center justify-center text-xs bg-destructive text-destructive-foreground border-2 border-background shadow-sm rounded-full">{cartCount}</Badge>}
             </Button>
           </SheetTrigger>
           <SheetContent className="flex flex-col w-full sm:max-w-sm rounded-l-2xl border-l-0 shadow-xl p-5">
@@ -148,7 +148,7 @@ export default function OrderPage() {
                    <span className="text-2xl font-extrabold font-heading text-primary">৳{cartTotal}</span>
                 </div>
                 <Button className="w-full h-11 rounded-full font-bold shadow-md bg-gradient-to-r from-emerald-500 to-teal-500 border-none relative overflow-hidden" onClick={handlePlaceOrder}>
-                   Dispatch Order <ArrowRight className="ml-1.5 h-4 w-4" />
+                   Place Order <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
               </SheetFooter>
             )}

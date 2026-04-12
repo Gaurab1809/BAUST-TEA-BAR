@@ -26,9 +26,8 @@ interface AppState {
   // Notifications
   notifications: Notification[];
   markNotificationRead: (notifId: string) => void;
-  markAllNotificationsRead: () => void;
+  markAllNotificationsRead: (notifIdsToMark: string[]) => void;
   addNotification: (notif: Omit<Notification, "id" | "createdAt">) => void;
-  unreadCount: number;
 
   // Users (admin)
   users: User[];
@@ -176,7 +175,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     // Directly track it in the bill right now so admin sees unpaid amount instantly
     await updateMonthlyBill(userId, userName, total, date, false);
 
-    addNotification({ title: "Order Placed", message: `Your order for ${dayName} (৳${total}) has been placed.`, type: "order", read: false });
+    addNotification({ title: "Order Placed", message: `Your order for ${dayName} (৳${total}) has been placed.`, type: "order", targetUserId: userId, read: false });
   }, [addNotification]);
 
   const cancelOrder = useCallback(async (orderId: string) => {
@@ -185,7 +184,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
     await updateDoc(doc(db, "orders", orderId), { status: "cancelled" });
     await updateMonthlyBill(o.userId, o.userName, o.total, o.date, true);
-    addNotification({ title: "Order Cancelled", message: "Your order has been cancelled.", type: "order", read: false });
+    addNotification({ title: "Order Cancelled", message: "Your order has been cancelled.", type: "order", targetUserId: o.userId, read: false });
   }, [orders, addNotification]);
 
   const confirmOrder = useCallback(async (orderId: string) => {
@@ -193,7 +192,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     if (!o) return;
     
     await updateDoc(doc(db, "orders", orderId), { status: "confirmed" });
-    addNotification({ title: "Order Confirmed", message: `${o.userName}'s order for ${o.dayName} has been confirmed.`, type: "order", read: false });
+    addNotification({ title: "Order Confirmed", message: `${o.userName}'s order for ${o.dayName} has been confirmed.`, type: "order", targetUserId: o.userId, read: false });
   }, [orders, addNotification]);
 
   const rejectOrder = useCallback(async (orderId: string) => {
@@ -202,7 +201,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
     await updateDoc(doc(db, "orders", orderId), { status: "cancelled" });
     await updateMonthlyBill(o.userId, o.userName, o.total, o.date, true);
-    addNotification({ title: "Order Rejected", message: "An order has been rejected by admin.", type: "order", read: false });
+    addNotification({ title: "Order Rejected", message: "An order has been rejected by admin.", type: "order", targetUserId: o.userId, read: false });
   }, [orders, addNotification]);
 
   const completeOrder = useCallback((orderId: string) => {
@@ -217,7 +216,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       paidAmount: b.totalAmount,
       status: "paid"
     });
-    addNotification({ title: "Payment Recorded", message: "Your payment has been marked as fully paid.", type: "payment", read: false });
+    addNotification({ title: "Payment Recorded", message: "Your payment has been marked as fully paid.", type: "payment", targetUserId: b.userId, read: false });
   }, [bills, addNotification]);
 
   const markBillPartial = useCallback(async (billId: string, amount: number) => {
@@ -238,15 +237,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     updateDoc(doc(db, "notifications", notifId), { read: true });
   }, []);
 
-  const markAllNotificationsRead = useCallback(async () => {
+  const markAllNotificationsRead = useCallback(async (notifIdsToMark: string[]) => {
     const batch = writeBatch(db);
-    notifications.filter(n => !n.read).forEach((n) => {
-      batch.update(doc(db, "notifications", n.id), { read: true });
+    notifIdsToMark.forEach((id) => {
+      batch.update(doc(db, "notifications", id), { read: true });
     });
     await batch.commit();
-  }, [notifications]);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  }, []);
 
   // -- USERS --
   const addUser = useCallback((user: User) => {
@@ -274,7 +271,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       menuItems, addMenuItem, updateMenuItem, deleteMenuItem,
       orders, placeOrder, cancelOrder, confirmOrder, rejectOrder, completeOrder,
       bills, markBillPaid, markBillPartial,
-      notifications, markNotificationRead, markAllNotificationsRead, addNotification, unreadCount,
+      notifications, markNotificationRead, markAllNotificationsRead, addNotification,
       users, addUser, deleteUser, updateUser, blockUser,
     }}>
       {children}
