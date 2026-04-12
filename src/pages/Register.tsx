@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth-context";
 import { ArrowRight, Coffee, ShieldCheck } from "lucide-react";
 import logo from "@/assets/logo.png";
 
-const DEPARTMENTS = ["CSE", "EEE", "CE", "ME", "TE", "BBA", "English", "Math", "Physics", "Chemistry"];
+const DEPARTMENTS = ["CSE", "EEE", "ICT", "ME", "IPE", "Civil Engineering (CE)", "DBA", "AIS", "English", "Department of Arts and Sciences (Bangla, English, Physics, Math, Chemistry, Sociology)"];
 
 export default function Register() {
   const { register } = useAuth();
