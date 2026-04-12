@@ -103,7 +103,7 @@ export default function MyOrders() {
                   
                   <div className="flex justify-end mt-4 pt-3 border-t">
                     {order.status === "pending" && (
-                      <Button variant="outline" size="sm" className="rounded-xl px-4 h-8 text-xs border-red-200 text-red-600 hover:bg-red-50" onClick={() => handleCancel(order.id)}>
+                      <Button variant="outline" size="sm" className="rounded-xl px-4 h-8 text-xs border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300" onClick={() => handleCancel(order.id)}>
                         <Ban className="w-3 w-3 mr-1" /> Cancel
                       </Button>
                     )}
