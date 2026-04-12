@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth-context";
 import { useAppState } from "@/lib/app-state";
 import { toast } from "sonner";
+import { getAccurateOrderDate } from "@/lib/utils";
 import { ShoppingBag, Ban, Clock, Search } from "lucide-react";
 
 const statusColors: Record<string, string> = {
@@ -26,7 +27,7 @@ export default function MyOrders() {
      if (!searchQuery) return true;
      const lowerQuery = searchQuery.toLowerCase();
      return o.dayName.toLowerCase().includes(lowerQuery) ||
-            new Date(o.date).toLocaleDateString().includes(lowerQuery) ||
+            getAccurateOrderDate(o.date, o.dayName).toLocaleDateString().includes(lowerQuery) ||
             o.items.some(i => i.menuItem.name.toLowerCase().includes(lowerQuery));
   });
 
@@ -82,7 +83,7 @@ export default function MyOrders() {
                         {order.dayName}
                       </Badge>
                       <span className="text-muted-foreground font-bold text-xs flex items-center gap-1.5 ml-1">
-                        <Clock className="w-3 h-3 text-primary" /> {new Date(order.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        <Clock className="w-3 h-3 text-primary" /> {getAccurateOrderDate(order.date, order.dayName).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </div>
                   </div>
@@ -105,7 +106,8 @@ export default function MyOrders() {
                     ))}
                   </div>
                   
-                  <div className="flex justify-end mt-4 pt-3 border-t">
+                  <div className="flex justify-between items-center mt-4 pt-3 border-t">
+                    <span className="font-bold text-sm text-primary">Order Total: ৳{order.total}</span>
                     {order.status === "pending" && (
                       <Button variant="outline" size="sm" className="rounded-xl px-4 h-8 text-xs border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300" onClick={() => handleCancel(order.id)}>
                         <Ban className="w-3 w-3 mr-1" /> Cancel

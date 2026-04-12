@@ -133,9 +133,9 @@ export default function OrderPage() {
                        </div>
                     </div>
                     <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-full border">
-                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-primary/20 hover:text-primary text-foreground" onClick={() => updateQuantity(c.menuItem.id, -1)}><Minus className="h-3 w-3" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-black/10 dark:hover:bg-white/20 text-foreground" onClick={() => updateQuantity(c.menuItem.id, -1)}><Minus className="h-3 w-3" /></Button>
                       <span className="text-xs w-3 text-center font-bold">{c.quantity}</span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-primary/20 hover:text-primary text-foreground" onClick={() => updateQuantity(c.menuItem.id, 1)}><Plus className="h-3 w-3" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-black/10 dark:hover:bg-white/20 text-foreground" onClick={() => updateQuantity(c.menuItem.id, 1)}><Plus className="h-3 w-3" /></Button>
                     </div>
                   </div>
                 ))
@@ -233,9 +233,9 @@ export default function OrderPage() {
                        {inCart ? (
                          <div className="flex items-center justify-between bg-primary/5 p-1.5 rounded-xl border border-primary/20">
                            <div className="flex items-center gap-1.5 bg-background shadow-sm rounded-full p-0.5 border">
-                             <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full text-foreground hover:bg-primary/20 hover:text-primary" onClick={() => updateQuantity(item.id, -1)}><Minus className="h-3 w-3" /></Button>
+                             <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full text-foreground hover:bg-black/10 dark:hover:bg-white/20" onClick={() => updateQuantity(item.id, -1)}><Minus className="h-3 w-3" /></Button>
                              <span className="w-4 text-center font-bold text-sm">{inCart.quantity}</span>
-                             <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full text-primary bg-primary/10 hover:bg-primary hover:text-white" onClick={() => updateQuantity(item.id, 1)}><Plus className="h-3 w-3" /></Button>
+                             <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full text-primary bg-primary/10 hover:bg-primary hover:text-white dark:hover:bg-primary/50" onClick={() => updateQuantity(item.id, 1)}><Plus className="h-3 w-3" /></Button>
                            </div>
                            <span className="text-sm font-extrabold font-heading text-primary mr-2">৳{item.price * inCart.quantity}</span>
                          </div>

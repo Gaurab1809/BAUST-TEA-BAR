@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { useAppState } from "@/lib/app-state";
 import { MenuItem, WORKING_DAYS, DayOfWeek } from "@/lib/mock-data";
 
+import { getAccurateOrderDate } from "@/lib/utils";
+
 const statusColors: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
   confirmed: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
@@ -225,7 +227,7 @@ export default function AdminDashboard() {
                   <div>
                     <CardTitle className="text-sm font-bold truncate max-w-[150px]">{order.userName}</CardTitle>
                     <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] px-1.5 py-0 mt-1 shadow-none w-fit">
-                       {order.dayName.slice(0, 3)}, {new Date(order.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                       {order.dayName.slice(0, 3)}, {getAccurateOrderDate(order.date, order.dayName).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </Badge>
                   </div>
                   <Badge variant="outline" className={`text-[10px] px-2 py-0 shadow-sm capitalize ${statusColors[order.status]}`}>{order.status}</Badge>
