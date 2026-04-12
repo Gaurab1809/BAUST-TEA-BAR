@@ -224,7 +224,9 @@ export default function AdminDashboard() {
                 <CardHeader className="p-3 bg-muted/30 border-b flex flex-row items-center justify-between space-y-0">
                   <div>
                     <CardTitle className="text-sm font-bold truncate max-w-[150px]">{order.userName}</CardTitle>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{order.dayName}, {order.date}</p>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] px-1.5 py-0 mt-1 shadow-none w-fit">
+                       {order.dayName.slice(0, 3)}, {new Date(order.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </Badge>
                   </div>
                   <Badge variant="outline" className={`text-[10px] px-2 py-0 shadow-sm capitalize ${statusColors[order.status]}`}>{order.status}</Badge>
                 </CardHeader>

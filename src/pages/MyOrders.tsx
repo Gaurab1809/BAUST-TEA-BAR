@@ -77,10 +77,14 @@ export default function MyOrders() {
                          {order.status}
                        </Badge>
                     </div>
-                    <h3 className="font-heading font-bold text-lg mt-2">{order.dayName}</h3>
-                    <p className="text-muted-foreground font-medium text-xs flex items-center gap-1 mt-0.5">
-                      <Clock className="w-3 h-3" /> {new Date(order.date).toLocaleDateString()}
-                    </p>
+                    <div className="mt-2 mb-1 inline-flex flex-col gap-1">
+                      <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 font-heading text-sm px-2.5 py-0.5 w-fit shadow-none">
+                        {order.dayName}
+                      </Badge>
+                      <span className="text-muted-foreground font-bold text-xs flex items-center gap-1.5 ml-1">
+                        <Clock className="w-3 h-3 text-primary" /> {new Date(order.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    </div>
                   </div>
                   <div className="mt-4 md:mt-6">
                      <p className="text-[10px] text-muted-foreground uppercase font-bold">Total</p>
