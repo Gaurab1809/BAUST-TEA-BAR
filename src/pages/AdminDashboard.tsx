@@ -67,6 +67,7 @@ export default function AdminDashboard() {
   const [formPrice, setFormPrice] = useState("");
   const [formCategory, setFormCategory] = useState<"tea" | "snack" | "meal">("tea");
   const [formDays, setFormDays] = useState<DayOfWeek[]>([]);
+  const [formImage, setFormImage] = useState("");
   
   const filteredOrders = orders.filter(o => 
     (orderFilter === "all" || o.status === orderFilter) &&
@@ -91,22 +92,38 @@ export default function AdminDashboard() {
   const pendingCount = orders.filter(o => o.status === "pending").length;
 
   const openAddMenu = () => {
-    setEditingItem(null); setFormName(""); setFormDesc(""); setFormPrice(""); setFormCategory("tea"); setFormDays([]);
+    setEditingItem(null); setFormName(""); setFormDesc(""); setFormPrice(""); setFormCategory("tea"); setFormDays([]); setFormImage("");
     setMenuDialogOpen(true);
   };
   const openEditMenu = (item: MenuItem) => {
     setEditingItem(item); setFormName(item.name); setFormDesc(item.description); setFormPrice(String(item.price));
-    setFormCategory(item.category); setFormDays([...item.availableDays]);
+    setFormCategory(item.category); setFormDays([...item.availableDays]); setFormImage(item.image || "");
     setMenuDialogOpen(true);
   };
   const handleSaveMenu = () => {
     if (!formName || !formPrice || formDays.length === 0) return toast.error("Fill required fields and select a day");
     const payload = {
       name: formName, description: formDesc, price: Number(formPrice),
-      category: formCategory, availableDays: formDays, image: editingItem?.image || "/placeholder.svg",
+      category: formCategory, availableDays: formDays, image: formImage || editingItem?.image || "/placeholder.svg",
     };
     if (editingItem) { updateMenuItem(editingItem.id, payload); toast.success("Updated"); } else { addMenuItem(payload); toast.success("Added"); }
     setMenuDialogOpen(false);
+  };
+  
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit for firestore safety
+        toast.error("Image must be less than 1MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormImage(reader.result as string);
+        toast.success("Image added locally!");
+      };
+      reader.readAsDataURL(file);
+    }
   };
   const handleDeleteMenu = (id: string) => { deleteMenuItem(id); toast.success("Deleted"); setDeleteConfirm(null); };
   const toggleDay = (day: DayOfWeek) => setFormDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
@@ -395,6 +412,23 @@ export default function AdminDashboard() {
                  </SelectContent>
                </Select>
              </div>
+             
+             <div className="space-y-2 mt-2">
+               <Label className="text-xs text-muted-foreground font-bold">Image</Label>
+               <div className="flex gap-2">
+                 <Input value={formImage} onChange={e=>setFormImage(e.target.value)} placeholder="Image URL..." className="h-10 text-sm bg-muted/30 flex-1" />
+                 <div className="relative">
+                   <Input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                   <Button type="button" variant="outline" className="h-10 w-10 p-0 shrink-0"><ImageIcon className="h-4 w-4" /></Button>
+                 </div>
+               </div>
+               {formImage && (
+                 <div className="mt-2 w-full h-32 rounded-xl overflow-hidden border">
+                   <img src={formImage} alt="Preview" className="w-full h-full object-cover" />
+                 </div>
+               )}
+             </div>
+
              <div className="flex flex-wrap gap-1 mt-1">
                 {WORKING_DAYS.map(day => (
                   <button key={day} type="button" onClick={() => toggleDay(day)} className={`px-2 py-1 text-[10px] rounded-md border ${formDays.includes(day) ? 'bg-primary text-white border-primary' : 'bg-background'}`}>{day.slice(0,3)}</button>
