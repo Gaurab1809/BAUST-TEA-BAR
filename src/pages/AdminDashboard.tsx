@@ -209,22 +209,22 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="orders" className="w-full">
-        <div className="overflow-x-auto pb-2 mb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0 sm:mb-6 print:hidden">
-          <TabsList className="inline-flex w-max sm:w-auto h-auto p-1.5 bg-muted/50 backdrop-blur-md rounded-2xl border shadow-sm gap-1">
-            <TabsTrigger value="orders" className="rounded-xl px-5 sm:px-7 py-2 text-sm font-bold data-[state=active]:shadow-sm transition-all whitespace-nowrap">Orders</TabsTrigger>
-            <TabsTrigger value="menu" className="rounded-xl px-5 sm:px-7 py-2 text-sm font-bold data-[state=active]:shadow-sm transition-all whitespace-nowrap">Menu Items</TabsTrigger>
-            <TabsTrigger value="billing" className="rounded-xl px-5 sm:px-7 py-2 text-sm font-bold data-[state=active]:shadow-sm transition-all whitespace-nowrap">Billings</TabsTrigger>
-            <TabsTrigger value="users" className="rounded-xl px-5 sm:px-7 py-2 text-sm font-bold data-[state=active]:shadow-sm transition-all whitespace-nowrap">Manage Users</TabsTrigger>
+        <div className="mb-4 sm:mb-6 print:hidden w-full">
+          <TabsList className="flex w-full h-auto p-1 bg-muted/60 backdrop-blur-xl rounded-[1.25rem] border shadow-inner sm:inline-flex sm:w-auto gap-0.5 sm:gap-1.5">
+            <TabsTrigger value="orders" className="flex-1 sm:flex-none rounded-xl py-2.5 px-0 sm:px-7 sm:py-2 text-[11px] min-[370px]:text-[12px] sm:text-sm font-extrabold uppercase tracking-wide data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow transition-all whitespace-nowrap">Orders</TabsTrigger>
+            <TabsTrigger value="menu" className="flex-1 sm:flex-none rounded-xl py-2.5 px-0 sm:px-7 sm:py-2 text-[11px] min-[370px]:text-[12px] sm:text-sm font-extrabold uppercase tracking-wide data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow transition-all whitespace-nowrap">Menu</TabsTrigger>
+            <TabsTrigger value="billing" className="flex-1 sm:flex-none rounded-xl py-2.5 px-0 sm:px-7 sm:py-2 text-[11px] min-[370px]:text-[12px] sm:text-sm font-extrabold uppercase tracking-wide data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow transition-all whitespace-nowrap">Bills</TabsTrigger>
+            <TabsTrigger value="users" className="flex-1 sm:flex-none rounded-xl py-2.5 px-0 sm:px-7 sm:py-2 text-[11px] min-[370px]:text-[12px] sm:text-sm font-extrabold uppercase tracking-wide data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow transition-all whitespace-nowrap">Users</TabsTrigger>
           </TabsList>
         </div>
 
         <TabsContent value="orders" className="space-y-4 animate-in">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
-            <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
                <h3 className="font-heading font-black text-xl md:text-2xl flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider whitespace-nowrap drop-shadow-sm">
                  <ShoppingBag className="h-5 w-5 text-primary" /> Orders
                </h3>
-               <SearchBar val={orderQuery} setVal={setOrderQuery} placeholder="Search by name..." />
+               <div className="w-full sm:w-auto"><SearchBar val={orderQuery} setVal={setOrderQuery} placeholder="Search by name..." /></div>
             </div>
             <div className="flex items-center gap-2 flex-wrap md:justify-end">
               <Select value={orderFilter} onValueChange={setOrderFilter}>
@@ -337,9 +337,9 @@ export default function AdminDashboard() {
 
         <TabsContent value="menu" className="space-y-4 animate-in">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
-            <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
               <h3 className="font-heading font-black text-xl md:text-2xl flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider whitespace-nowrap drop-shadow-sm">Menu Items</h3>
-              <SearchBar val={menuQuery} setVal={setMenuQuery} placeholder="Search item..." />
+              <div className="w-full sm:w-auto"><SearchBar val={menuQuery} setVal={setMenuQuery} placeholder="Search item..." /></div>
             </div>
             <div className="flex items-center gap-2 flex-wrap md:justify-end">
               <Select value={menuCategory} onValueChange={setMenuCategory}>
@@ -420,9 +420,9 @@ export default function AdminDashboard() {
 
         <TabsContent value="billing" className="space-y-4 animate-in">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
-             <div className="flex items-center gap-3 w-full md:w-auto">
+             <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
                <h3 className="font-heading font-black text-xl md:text-2xl flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider whitespace-nowrap drop-shadow-sm">Billings</h3>
-               <SearchBar val={billQuery} setVal={setBillQuery} placeholder="Search user..." />
+               <div className="w-full sm:w-auto"><SearchBar val={billQuery} setVal={setBillQuery} placeholder="Search user..." /></div>
              </div>
              <div className="flex items-center gap-2 flex-wrap">
                <Select value={billStatus} onValueChange={setBillStatus}>
@@ -506,9 +506,9 @@ export default function AdminDashboard() {
 
         <TabsContent value="users" className="space-y-4 animate-in">
            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
-             <div className="flex items-center gap-3 w-full md:w-auto">
+             <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
                <h3 className="font-heading font-black text-xl md:text-2xl flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider whitespace-nowrap drop-shadow-sm">Manage Users</h3>
-               <SearchBar val={userQuery} setVal={setUserQuery} placeholder="Search name/email..." />
+               <div className="w-full sm:w-auto"><SearchBar val={userQuery} setVal={setUserQuery} placeholder="Search name/email..." /></div>
              </div>
              <div className="flex items-center gap-2 flex-wrap md:justify-end">
                <Select value={userFilter} onValueChange={setUserFilter}>
