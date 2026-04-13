@@ -45,6 +45,18 @@ function ExportButton({ data, filename }: { data: Record<string, unknown>[]; fil
   );
 }
 
+const SearchBar = ({ val, setVal, placeholder }: { val: string, setVal: (s:string)=>void, placeholder: string }) => (
+  <div className="relative max-w-xs w-full">
+    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+    <Input
+      placeholder={placeholder}
+      value={val}
+      onChange={(e) => setVal(e.target.value)}
+      className="h-8 pl-8 text-xs rounded-lg bg-card border-border/50"
+    />
+  </div>
+);
+
 export default function AdminDashboard() {
   const { orders, confirmOrder, rejectOrder, completeOrder, menuItems, addMenuItem, updateMenuItem, deleteMenuItem, bills, markBillPaid, users, deleteUser, addNotification, blockUser } = useAppState();
   
@@ -138,17 +150,7 @@ export default function AdminDashboard() {
   const ordersExportData = orders.map(o => ({ User: o.userName, Date: o.date, Day: o.dayName, Items: o.items.map(i => `${i.menuItem.name}×${i.quantity}`).join("; "), Total: o.total, Status: o.status }));
   const billsExportData = bills.map(b => ({ User: b.userName, Month: b.month, Orders: b.orders, Total: b.totalAmount, Paid: b.paidAmount, Status: b.status }));
 
-  const SearchBar = ({ val, setVal, placeholder }: { val: string, setVal: (s:string)=>void, placeholder: string }) => (
-    <div className="relative max-w-xs w-full">
-      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-      <Input
-        placeholder={placeholder}
-        value={val}
-        onChange={(e) => setVal(e.target.value)}
-        className="h-8 pl-8 text-xs rounded-lg bg-card border-border/50"
-      />
-    </div>
-  );
+
 
   return (
     <div className="container max-w-7xl py-6 px-4 animate-in fade-in min-h-screen">
