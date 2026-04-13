@@ -1,7 +1,7 @@
 <<<<<<< HEAD
 # BAUST-TEA-BAR
 =======
-# BAUST Tea Hub
+# BAUST Tea Bar
 
 A comprehensive Tea & Snack Order and Billing Hub designed specifically for BAUST teachers and staff.
 
@@ -15,4 +15,4 @@ A comprehensive Tea & Snack Order and Billing Hub designed specifically for BAUS
 ## Launch
 1. Ensure dependencies are installed: `npm install`
 2. Start development sever: `npm run dev`
->>>>>>> 3b7f2de (Initialize BAUST Tea Hub Repository)
+>>>>>>> 3b7f2de (Initialize BAUST Tea Bar Repository)

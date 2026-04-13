@@ -126,9 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await setDoc(doc(db, "users", uid), userData);
       
       return { success: true, message: "Registration successful" };
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
-      return { success: false, message: e.message || "Network error occurred." };
+      const msg = e instanceof Error ? e.message : "Network error occurred.";
+      return { success: false, message: msg };
     }
   }, []);
 
@@ -149,9 +150,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         success: true, 
         message: "An email with instructions to reset your password has been sent."
       };
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
-      return { success: false, message: `Failed to send reset email: ${e.message || "Unknown error"}` };
+      const msg = e instanceof Error ? e.message : "Unknown error";
+      return { success: false, message: `Failed to send reset email: ${msg}` };
     }
   }, []);
 

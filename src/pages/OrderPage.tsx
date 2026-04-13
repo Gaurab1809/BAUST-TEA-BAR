@@ -86,7 +86,7 @@ export default function OrderPage() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
           <h1 className="font-heading text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Order Catalog
+            Menu
           </h1>
           <p className="text-muted-foreground font-medium text-sm mt-1">
             Secure your meals ahead of time.
@@ -192,7 +192,7 @@ export default function OrderPage() {
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
           <h2 className="font-heading text-xl font-bold flex items-center gap-2">
-            <span className="text-primary">{selectedDay.dayName}</span> Catalog
+            <span className="text-primary">{selectedDay.dayName}</span> Menu
           </h2>
           <div className="relative max-w-xs w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -213,7 +213,7 @@ export default function OrderPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-             {/* Catalog Items */}
+             {/* Menu Items */}
              {availableItems.map((item, idx) => {
                const inCart = cart.find(c => c.menuItem.id === item.id);
                return (

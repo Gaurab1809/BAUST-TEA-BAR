@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Users, ShoppingBag, TrendingUp, Clock, CheckCircle, XCircle, Plus, Edit, Trash2, Download, Send, Ban, ShieldCheck, ShieldOff, Upload, Image as ImageIcon, ChevronRight, Search } from "lucide-react";
+import { Users, ShoppingBag, TrendingUp, Clock, CheckCircle, XCircle, Plus, Edit, Trash2, Download, Send, Ban, ShieldCheck, ShieldOff, Upload, Image as ImageIcon, ChevronRight, Search, Printer, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,12 @@ function ExportButton({ data, filename }: { data: Record<string, unknown>[]; fil
   );
 }
 
+const PrintButton = () => (
+  <Button variant="outline" size="sm" onClick={() => window.print()} className="rounded-full shadow-sm hover:shadow transition-all group border-primary/20 hover:border-primary/50 text-xs h-8">
+    <Printer className="h-3 w-3 mr-1.5" /> Print
+  </Button>
+);
+
 const SearchBar = ({ val, setVal, placeholder }: { val: string, setVal: (s:string)=>void, placeholder: string }) => (
   <div className="relative max-w-xs w-full">
     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -68,6 +74,9 @@ export default function AdminDashboard() {
 
   const [orderFilter, setOrderFilter] = useState("all");
   const [billingMonth, setBillingMonth] = useState("all");
+  const [menuCategory, setMenuCategory] = useState("all");
+  const [billStatus, setBillStatus] = useState("all");
+  const [userFilter, setUserFilter] = useState("all");
 
   const [menuDialogOpen, setMenuDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -88,19 +97,28 @@ export default function AdminDashboard() {
     (o.userName || "").toLowerCase().includes(orderQuery.toLowerCase())
   );
 
-  const filteredMenu = menuItems.filter(m => (m.name || "").toLowerCase().includes(menuQuery.toLowerCase()));
+  const filteredMenu = menuItems.filter(m => 
+    (menuCategory === "all" || m.category === menuCategory) &&
+    (m.name || "").toLowerCase().includes(menuQuery.toLowerCase())
+  );
 
   const allBillingMonths = [...new Set(bills.map(b => b.month))];
   const filteredBills = bills.filter(b => 
     (billingMonth === "all" || b.month === billingMonth) &&
+    (billStatus === "all" || b.status === billStatus) &&
     (b.userName || "").toLowerCase().includes(billQuery.toLowerCase())
   );
 
-  const filteredUsers = users.filter(u => 
-    (u.name || "").toLowerCase().includes(userQuery.toLowerCase()) || 
-    (u.email || "").toLowerCase().includes(userQuery.toLowerCase()) ||
-    (u.department || "").toLowerCase().includes(userQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const matchesQuery = (u.name || "").toLowerCase().includes(userQuery.toLowerCase()) || 
+                         (u.email || "").toLowerCase().includes(userQuery.toLowerCase()) ||
+                         (u.department || "").toLowerCase().includes(userQuery.toLowerCase());
+    const matchesFilter = userFilter === "all" ? true :
+                          userFilter === "admin" ? u.role === "admin" :
+                          userFilter === "restricted" ? (u.blocked && u.blocked !== "none") :
+                          userFilter === "member" ? (u.role !== "admin" && (!u.blocked || u.blocked === "none")) : true;
+    return matchesQuery && matchesFilter;
+  });
 
   const totalRevenue = orders.filter(o => o.status === "completed" || o.status === "confirmed").reduce((s, o) => s + o.total, 0);
   const pendingCount = orders.filter(o => o.status === "pending").length;
@@ -153,8 +171,8 @@ export default function AdminDashboard() {
 
 
   return (
-    <div className="container max-w-7xl py-6 px-4 animate-in fade-in min-h-screen">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div className="container max-w-7xl py-6 px-4 animate-in fade-in min-h-screen relative">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 print:hidden">
         <div>
           <h1 className="font-heading text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Admin Workspace</h1>
           <p className="text-muted-foreground mt-1 font-medium text-sm">Control center for operations.</p>
@@ -165,9 +183,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 print:hidden">
         {[
-          { label: "Directory", value: users.length, sub: "Members", icon: Users, gradient: "from-blue-500/10 to-cyan-500/5", line: "bg-blue-500" },
+          { label: "Manage Users", value: users.length, sub: "Members", icon: Users, gradient: "from-blue-500/10 to-cyan-500/5", line: "bg-blue-500" },
           { label: "Fulfillment", value: orders.length, sub: "Total", icon: ShoppingBag, gradient: "from-purple-500/10 to-pink-500/5", line: "bg-purple-500" },
           { label: "Revenue", value: `৳${totalRevenue.toLocaleString()}`, sub: "Confirmed", icon: TrendingUp, gradient: "from-emerald-500/10 to-teal-500/5", line: "bg-emerald-500" },
           { label: "Required", value: pendingCount, sub: "Pending", icon: Clock, gradient: pendingCount > 0 ? "from-rose-500/20 to-orange-500/5" : "from-slate-500/10 to-gray-500/5", line: pendingCount > 0 ? "bg-rose-500" : "bg-slate-500" },
@@ -191,23 +209,24 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="orders" className="w-full">
-        <TabsList className="mb-5 w-full sm:w-auto overflow-x-auto justify-start p-1 bg-muted/50 backdrop-blur-md rounded-2xl border">
-          <TabsTrigger value="orders" className="rounded-xl px-5 py-2 text-sm data-[state=active]:shadow-sm transition-all">Orders</TabsTrigger>
-          <TabsTrigger value="menu" className="rounded-xl px-5 py-2 text-sm data-[state=active]:shadow-sm transition-all">Menu</TabsTrigger>
-          <TabsTrigger value="billing" className="rounded-xl px-5 py-2 text-sm data-[state=active]:shadow-sm transition-all">Billing</TabsTrigger>
-          <TabsTrigger value="users" className="rounded-xl px-5 py-2 text-sm data-[state=active]:shadow-sm transition-all">Directory</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-2 mb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0 sm:mb-6 print:hidden">
+          <TabsList className="inline-flex w-max sm:w-auto h-auto p-1.5 bg-muted/50 backdrop-blur-md rounded-2xl border shadow-sm gap-1">
+            <TabsTrigger value="orders" className="rounded-xl px-5 sm:px-7 py-2 text-sm font-bold data-[state=active]:shadow-sm transition-all whitespace-nowrap">Orders</TabsTrigger>
+            <TabsTrigger value="menu" className="rounded-xl px-5 sm:px-7 py-2 text-sm font-bold data-[state=active]:shadow-sm transition-all whitespace-nowrap">Menu Items</TabsTrigger>
+            <TabsTrigger value="billing" className="rounded-xl px-5 sm:px-7 py-2 text-sm font-bold data-[state=active]:shadow-sm transition-all whitespace-nowrap">Billings</TabsTrigger>
+            <TabsTrigger value="users" className="rounded-xl px-5 sm:px-7 py-2 text-sm font-bold data-[state=active]:shadow-sm transition-all whitespace-nowrap">Manage Users</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="orders" className="space-y-4 animate-in">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
             <div className="flex items-center gap-3 w-full md:w-auto">
-               <h3 className="font-heading font-semibold text-base flex items-center gap-2 pl-2 whitespace-nowrap">
-                 <ShoppingBag className="h-4 w-4 text-primary" /> Manifest
+               <h3 className="font-heading font-black text-xl md:text-2xl flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider whitespace-nowrap drop-shadow-sm">
+                 <ShoppingBag className="h-5 w-5 text-primary" /> Orders
                </h3>
                <SearchBar val={orderQuery} setVal={setOrderQuery} placeholder="Search by name..." />
             </div>
-            <div className="flex items-center gap-2">
-              <ExportButton data={ordersExportData} filename="orders" />
+            <div className="flex items-center gap-2 flex-wrap md:justify-end">
               <Select value={orderFilter} onValueChange={setOrderFilter}>
                 <SelectTrigger className="w-[120px] rounded-xl h-8 text-xs bg-card"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -218,66 +237,128 @@ export default function AdminDashboard() {
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
+              <PrintButton />
+              <ExportButton data={ordersExportData} filename="orders" />
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 print:hidden">
             {filteredOrders.length === 0 && <p className="text-muted-foreground text-sm col-span-full ml-2">No orders matched search criteria.</p>}
-            {filteredOrders.map(order => (
-              <Card key={order.id} className="group hover:shadow-md transition-all overflow-hidden border-border/50 rounded-2xl">
-                <CardHeader className="p-3 bg-muted/30 border-b flex flex-row items-center justify-between space-y-0">
-                  <div>
-                    <CardTitle className="text-sm font-bold truncate max-w-[150px]">{order.userName}</CardTitle>
-                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] px-1.5 py-0 mt-1 shadow-none w-fit">
-                       {order.dayName.slice(0, 3)}, {getAccurateOrderDate(order.date, order.dayName).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </Badge>
+            {filteredOrders.map(order => {
+              // Extract the base color for the top border
+              const colorBase = order.status === 'pending' ? 'bg-amber-500' :
+                                order.status === 'confirmed' ? 'bg-blue-500' :
+                                order.status === 'cancelled' ? 'bg-red-500' :
+                                order.status === 'completed' ? 'bg-emerald-500' : 'bg-primary';
+              return (
+              <Card key={order.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-border/80 hover:border-primary/30 rounded-3xl bg-card flex flex-col relative shadow-sm">
+                <div className={`absolute top-0 left-0 w-full h-1.5 ${colorBase}`}></div>
+                
+                <CardHeader className="p-4 bg-muted/20 border-b flex flex-row items-center justify-between space-y-0 mt-1">
+                  <div className="flex flex-col gap-1.5">
+                    <CardTitle className="text-base font-extrabold truncate max-w-[160px] leading-none">{order.userName}</CardTitle>
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] px-2 py-0.5 shadow-none uppercase font-bold leading-none">
+                         {order.dayName.slice(0, 3)}
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground font-semibold leading-none">
+                         {getAccurateOrderDate(order.date, order.dayName).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
                   </div>
-                  <Badge variant="outline" className={`text-[10px] px-2 py-0 shadow-sm capitalize ${statusColors[order.status]}`}>{order.status}</Badge>
+                  <Badge variant="outline" className={`text-xs px-2.5 py-1 whitespace-nowrap shadow-sm capitalize border-2 font-bold ${statusColors[order.status]}`}>{order.status}</Badge>
                 </CardHeader>
-                <CardContent className="p-3">
-                  <div className="text-xs font-medium mb-3 space-y-1">
+                <CardContent className="p-4 flex-1 flex flex-col">
+                  <div className="text-xs font-semibold mb-4 space-y-2 flex-1 mt-1">
                     {order.items.map((i, k) => (
-                      <div key={k} className="flex justify-between items-center bg-background border p-1.5 rounded-lg">
-                        <span className="text-muted-foreground truncate mr-2">{i.menuItem.name}</span>
+                      <div key={k} className="flex justify-between items-center bg-background border border-border/50 p-2.5 rounded-xl shadow-sm">
+                        <span className="text-foreground truncate mr-2 font-medium">{i.menuItem.name}</span>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold bg-muted px-1.5 py-0.5 rounded shadow-sm text-[10px]">x{i.quantity}</span>
-                          <span className="font-bold text-primary text-[10px]">৳{i.menuItem.price * i.quantity}</span>
+                          <span className="font-bold bg-muted px-2 py-1 rounded-md text-xs border border-border/50">x{i.quantity}</span>
+                          <span className="font-bold text-primary bg-primary/5 px-2 py-1 rounded-md text-xs border border-primary/10">৳{i.menuItem.price * i.quantity}</span>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <span className="font-bold text-sm text-primary">Total: ৳{order.total}</span>
-                    <div className="flex gap-1.5">
+                  <div className="flex items-center justify-between pt-4 border-t mt-auto">
+                    <div className="bg-primary/10 px-3.5 py-2 rounded-xl border border-primary/20 shadow-sm">
+                       <span className="font-black text-sm text-primary tracking-tight">৳{order.total}</span>
+                    </div>
+                    <div className="flex gap-2">
                       {order.status === "pending" && (
                         <>
-                          <Button size="icon" variant="outline" className="h-7 w-7 rounded-full text-success hover:bg-success hover:text-white border-success/30" onClick={() => confirmOrder(order.id)}><CheckCircle className="h-3.5 w-3.5" /></Button>
-                          <Button size="icon" variant="outline" className="h-7 w-7 rounded-full text-destructive hover:bg-destructive hover:text-white border-destructive/30" onClick={() => rejectOrder(order.id)}><XCircle className="h-3.5 w-3.5" /></Button>
+                          <Button size="icon" variant="outline" className="h-9 w-9 rounded-full text-emerald-600 hover:bg-emerald-600 hover:text-white border-emerald-600/30 shadow-sm transition-colors" onClick={() => confirmOrder(order.id)}><CheckCircle className="h-5 w-5" /></Button>
+                          <Button size="icon" variant="outline" className="h-9 w-9 rounded-full text-rose-600 hover:bg-rose-600 hover:text-white border-rose-600/30 shadow-sm transition-colors" onClick={() => rejectOrder(order.id)}><XCircle className="h-5 w-5" /></Button>
                         </>
                       )}
                       {order.status === "confirmed" && (
-                        <Button size="sm" className="h-7 text-xs rounded-full bg-primary/10 text-primary" onClick={() => completeOrder(order.id)}>Complete</Button>
+                        <Button size="sm" className="h-9 font-bold px-5 text-sm rounded-full bg-primary/10 hover:bg-primary/20 text-primary shadow-sm border border-primary/20" onClick={() => completeOrder(order.id)}>Complete</Button>
                       )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )})}
+          </div>
+
+          <div className="hidden print:block text-black">
+            <div className="mb-6 flex flex-col items-center border-b-2 border-black pb-4">
+              <h2 className="text-3xl font-black uppercase tracking-widest text-black">BAUST TEA BAR</h2>
+              <p className="text-lg font-bold text-gray-600 mt-1">Daily Orders Report</p>
+              <div className="flex w-full justify-between mt-4 text-xs font-bold text-gray-500">
+                <span>Total Found: {filteredOrders.length}</span>
+                <span>Generated: {new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
+            <table className="w-full text-sm border-collapse text-black">
+              <thead>
+                <tr className="border-b-2 border-black bg-gray-100 !print:bg-gray-100">
+                  <th className="p-3 text-left font-extrabold uppercase text-xs uppercase tracking-wider">User</th>
+                  <th className="p-3 text-left font-extrabold uppercase text-xs uppercase tracking-wider">Date</th>
+                  <th className="p-3 text-left font-extrabold uppercase text-xs uppercase tracking-wider">Items</th>
+                  <th className="p-3 text-left font-extrabold uppercase text-xs uppercase tracking-wider">Total</th>
+                  <th className="p-3 text-left font-extrabold uppercase text-xs uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOrders.map(order => (
+                  <tr key={order.id} className="border-b border-gray-300 break-inside-avoid">
+                    <td className="p-3 font-bold">{order.userName}</td>
+                    <td className="p-3 text-gray-700">{getAccurateOrderDate(order.date, order.dayName).toLocaleDateString()}</td>
+                    <td className="p-3">{order.items.map(i => `${i.menuItem.name} ×${i.quantity}`).join(', ')}</td>
+                    <td className="p-3 font-black text-gray-900 border-l border-gray-200">৳{order.total}</td>
+                    <td className="p-3 capitalize font-bold text-gray-600 border-l border-gray-200">{order.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </TabsContent>
 
         <TabsContent value="menu" className="space-y-4 animate-in">
-          <div className="flex flex-col sm:flex-row justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm">
-            <div className="flex items-center gap-3">
-              <h3 className="font-heading font-semibold text-base flex items-center gap-2 pl-2 whitespace-nowrap">Catalog</h3>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <h3 className="font-heading font-black text-xl md:text-2xl flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider whitespace-nowrap drop-shadow-sm">Menu Items</h3>
               <SearchBar val={menuQuery} setVal={setMenuQuery} placeholder="Search item..." />
             </div>
-            <Button onClick={openAddMenu} size="sm" className="rounded-full shadow-sm bg-gradient-to-r from-emerald-500 to-teal-500 border-none h-8 text-xs">
-              <Plus className="h-3.5 w-3.5 mr-1" /> Add
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap md:justify-end">
+              <Select value={menuCategory} onValueChange={setMenuCategory}>
+                <SelectTrigger className="w-[110px] rounded-xl h-8 text-xs bg-card"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="tea">Tea</SelectItem>
+                  <SelectItem value="snack">Snack</SelectItem>
+                  <SelectItem value="meal">Meal</SelectItem>
+                </SelectContent>
+              </Select>
+              <PrintButton />
+              <Button onClick={openAddMenu} size="sm" className="rounded-full shadow-sm bg-gradient-to-r from-emerald-500 to-teal-500 border-none h-8 text-xs">
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add
+              </Button>
+            </div>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 print:hidden">
             {filteredMenu.length === 0 && <p className="text-muted-foreground text-sm col-span-full ml-2">No menu items matched your search.</p>}
             {filteredMenu.map(item => (
               <Card key={item.id} className="overflow-hidden group hover:shadow-md transition-all border-border/50 rounded-2xl">
@@ -298,39 +379,74 @@ export default function AdminDashboard() {
                   </div>
                   <div className="grid grid-cols-2 gap-1.5">
                     <Button variant="outline" size="sm" className="h-7 text-xs rounded-lg" onClick={() => openEditMenu(item)}>Edit</Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs rounded-lg text-red-500" onClick={() => setDeleteConfirm(item.id)}>Del</Button>
+                    <Button variant="outline" size="sm" className="h-7 text-xs rounded-lg text-red-600 hover:bg-red-600 hover:text-white border-red-600/30" onClick={() => setDeleteConfirm(item.id)}>Del</Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+
+          <div className="hidden print:block text-black">
+            <div className="mb-6 flex flex-col items-center border-b-2 border-black pb-4">
+              <h2 className="text-3xl font-black uppercase tracking-widest text-black">BAUST TEA BAR</h2>
+              <p className="text-lg font-bold text-gray-600 mt-1">Menu Catalog</p>
+              <div className="flex w-full justify-between mt-4 text-xs font-bold text-gray-500">
+                <span>Total Items: {filteredMenu.length}</span>
+                <span>Generated: {new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
+            <table className="w-full text-sm border-collapse text-black">
+              <thead>
+                <tr className="border-b-2 border-black bg-gray-100 !print:bg-gray-100">
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Item Name</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Category</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Price</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredMenu.map(item => (
+                  <tr key={item.id} className="border-b border-gray-300 break-inside-avoid">
+                    <td className="p-3 font-bold">{item.name}</td>
+                    <td className="p-3 capitalize text-gray-700">{item.category}</td>
+                    <td className="p-3 font-black text-gray-900 border-l border-gray-200">৳{item.price}</td>
+                    <td className="p-3 text-xs text-gray-600 border-l border-gray-200">{item.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-4 animate-in">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
-             <div className="flex items-center gap-5 w-full md:w-auto">
-               <div>
-                  <h3 className="font-heading font-bold text-xl">Ledger</h3>
-                  <p className="text-slate-400 text-xs mt-0.5">Aggregated user debts.</p>
-               </div>
-               <div className="relative max-w-[200px] w-full">
-                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                 <Input placeholder="Search user..." value={billQuery} onChange={e => setBillQuery(e.target.value)} className="h-8 pl-8 text-xs rounded-lg bg-slate-900 border-slate-700 text-white" />
-               </div>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
+             <div className="flex items-center gap-3 w-full md:w-auto">
+               <h3 className="font-heading font-black text-xl md:text-2xl flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider whitespace-nowrap drop-shadow-sm">Billings</h3>
+               <SearchBar val={billQuery} setVal={setBillQuery} placeholder="Search user..." />
              </div>
-             <div className="flex flex-wrap gap-2 bg-slate-900/50 p-2 rounded-xl border border-slate-700">
+             <div className="flex items-center gap-2 flex-wrap">
+               <Select value={billStatus} onValueChange={setBillStatus}>
+                 <SelectTrigger className="w-[110px] rounded-xl h-8 text-xs bg-card"><SelectValue /></SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="all">All Status</SelectItem>
+                   <SelectItem value="paid">Paid</SelectItem>
+                   <SelectItem value="unpaid">Unpaid</SelectItem>
+                   <SelectItem value="partial">Partial</SelectItem>
+                 </SelectContent>
+               </Select>
                <Select value={billingMonth} onValueChange={setBillingMonth}>
-                 <SelectTrigger className="w-[120px] h-8 text-xs bg-slate-800 border-slate-700 text-slate-200 mt-1 md:mt-0"><SelectValue /></SelectTrigger>
+                 <SelectTrigger className="w-[120px] rounded-xl h-8 text-xs bg-card"><SelectValue /></SelectTrigger>
                  <SelectContent>
                    <SelectItem value="all">All Months</SelectItem>
                    {allBillingMonths.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
                  </SelectContent>
                </Select>
-               <Button onClick={() => ExportButton({ data: billsExportData, filename: "billing-ledger" }).props.onClick()} variant="secondary" size="sm" className="h-8 text-xs bg-white text-slate-900"><Download className="w-3.5 h-3.5 mr-1"/> Export</Button>
+               <PrintButton />
+               <ExportButton data={billsExportData} filename="billing-ledger" />
              </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 print:hidden">
             {filteredBills.length === 0 && <p className="text-muted-foreground text-sm col-span-full ml-2">No ledgers matched search criteria.</p>}
             {filteredBills.map(bill => (
               <Card key={bill.id} className="border shadow-sm rounded-2xl overflow-hidden bg-card">
@@ -351,55 +467,169 @@ export default function AdminDashboard() {
               </Card>
             ))}
           </div>
+
+          <div className="hidden print:block text-black">
+            <div className="mb-6 flex flex-col items-center border-b-2 border-black pb-4">
+              <h2 className="text-3xl font-black uppercase tracking-widest text-black">BAUST TEA BAR</h2>
+              <p className="text-lg font-bold text-gray-600 mt-1">Billing & Ledger Report</p>
+              <div className="flex w-full justify-between mt-4 text-xs font-bold text-gray-500">
+                <span>Total Bills: {filteredBills.length}</span>
+                <span>Generated: {new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
+            <table className="w-full text-sm border-collapse text-black">
+              <thead>
+                <tr className="border-b-2 border-black bg-gray-100 !print:bg-gray-100">
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">User Name</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Month</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Orders</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Owed</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Paid</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredBills.map(bill => (
+                  <tr key={bill.id} className="border-b border-gray-300 break-inside-avoid">
+                    <td className="p-3 font-bold">{bill.userName}</td>
+                    <td className="p-3 text-gray-700">{bill.month}</td>
+                    <td className="p-3 text-gray-700">{bill.orders}</td>
+                    <td className="p-3 font-black text-gray-900 border-l border-gray-200">৳{bill.totalAmount}</td>
+                    <td className="p-3 font-black text-dark-emerald-600 border-l border-gray-200">৳{bill.paidAmount}</td>
+                    <td className="p-3 capitalize font-bold text-gray-600 border-l border-gray-200">{bill.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </TabsContent>
 
         <TabsContent value="users" className="space-y-4 animate-in">
-           <div className="flex flex-col sm:flex-row justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm">
-             <div className="flex items-center gap-3">
-               <h3 className="font-heading border-l-2 border-primary pl-2 font-semibold text-base whitespace-nowrap">Active Directory</h3>
+           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
+             <div className="flex items-center gap-3 w-full md:w-auto">
+               <h3 className="font-heading font-black text-xl md:text-2xl flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider whitespace-nowrap drop-shadow-sm">Manage Users</h3>
                <SearchBar val={userQuery} setVal={setUserQuery} placeholder="Search name/email..." />
              </div>
-             <Badge variant="secondary" className="px-2 py-0.5 text-xs w-fit">{filteredUsers.length} Found</Badge>
+             <div className="flex items-center gap-2 flex-wrap md:justify-end">
+               <Select value={userFilter} onValueChange={setUserFilter}>
+                 <SelectTrigger className="w-[120px] rounded-xl h-8 text-xs bg-card"><SelectValue /></SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="all">All Users</SelectItem>
+                   <SelectItem value="admin">Admins</SelectItem>
+                   <SelectItem value="member">Members</SelectItem>
+                   <SelectItem value="restricted">Restricted</SelectItem>
+                 </SelectContent>
+               </Select>
+               <Badge variant="secondary" className="px-3 py-1 flex items-center justify-center text-xs h-8 rounded-lg">{filteredUsers.length} Found</Badge>
+               <PrintButton />
+             </div>
            </div>
           
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredUsers.map(u => (
-              <Card key={u.id} className="relative overflow-hidden border rounded-2xl shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center font-bold text-primary shadow-sm border">
-                      {u.name.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm truncate">{u.name}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">{u.designation}</p>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 print:hidden">
+            {filteredUsers.map(u => {
+              const isBlocked = u.blocked && u.blocked !== "none";
+              const colorBase = isBlocked ? "bg-red-500" : "bg-blue-500";
+              
+                      return (
+              <Card key={u.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-border/80 hover:border-primary/30 rounded-3xl bg-card flex flex-col relative shadow-sm">
+                <div className={`absolute top-0 left-0 w-full h-1.5 ${colorBase}`}></div>
+                
+                <CardHeader className="p-4 bg-muted/20 border-b flex flex-row items-center justify-between space-y-0 mt-1">
+                  <div className="flex flex-col gap-1.5">
+                    <CardTitle className="text-base font-extrabold truncate max-w-[160px] leading-none" title={u.name}>{u.name}</CardTitle>
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] px-2 py-0.5 shadow-none uppercase font-bold leading-none">
+                         {u.role === "admin" ? "Admin" : "Member"}
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground font-semibold leading-none truncate max-w-[140px]" title={u.email}>
+                         {u.email}
+                      </span>
                     </div>
                   </div>
-                  
-                  <div className="space-y-1 bg-muted/30 p-2 rounded-lg border text-[10px] mb-3">
-                     <p className="flex justify-between"><span className="text-muted-foreground">Dept:</span> <span className="font-medium truncate max-w-[100px]">{u.department}</span></p>
-                     <p className="flex justify-between"><span className="text-muted-foreground">Phone:</span> <span className="font-medium">{u.phone}</span></p>
+                  <Badge variant="outline" className={`text-xs px-2.5 py-1 whitespace-nowrap shadow-sm capitalize border-2 font-bold ${isBlocked ? 'bg-red-100 text-red-700 border-red-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
+                    {isBlocked ? "Restricted" : "Active"}
+                  </Badge>
+                </CardHeader>
+                
+                <CardContent className="p-4 flex-1 flex flex-col">
+                  <div className="text-xs font-semibold mb-4 space-y-2 flex-1 mt-1">
+                    
+                    <div className="flex justify-between items-center bg-background border border-border/50 p-2.5 rounded-xl shadow-sm">
+                      <span className="text-muted-foreground mr-2 font-medium">Designation</span>
+                      <span className="font-bold bg-muted px-2 py-1 rounded-md text-xs border border-border/50 text-foreground truncate max-w-[150px]">{u.designation}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center bg-background border border-border/50 p-2.5 rounded-xl shadow-sm">
+                      <span className="text-muted-foreground mr-2 font-medium">Department</span>
+                      <span className="font-bold bg-muted px-2 py-1 rounded-md text-xs border border-border/50 text-foreground truncate max-w-[150px]" title={u.department}>{u.department}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center bg-background border border-border/50 p-2.5 rounded-xl shadow-sm">
+                      <span className="text-muted-foreground mr-2 font-medium">Contact</span>
+                      <span className="font-bold bg-muted px-2 py-1 rounded-md text-xs border border-border/50 text-primary bg-primary/5">{u.phone}</span>
+                    </div>
+
                   </div>
 
-                  <div className="flex gap-1.5">
+                  <div className="flex items-center justify-between pt-4 border-t mt-auto gap-2">
+                    <div className="flex-1">
                     {(!u.blocked || u.blocked === "none") ? (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="flex-1 h-7 text-xs" size="sm">Restrict</Button>
+                          <Button variant="outline" className="w-full h-9 text-xs rounded-xl shadow-sm border border-border/50 font-bold" size="sm">Manage Rights</Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="center">
-                          <DropdownMenuItem onClick={() => blockUser(u.id, "ordering")}>Disable Ordering</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => blockUser(u.id, "full")} className="text-destructive">Full Ban</DropdownMenuItem>
+                        <DropdownMenuContent align="center" className="rounded-xl border-border/50 shadow-xl w-[200px]">
+                          <DropdownMenuItem onClick={() => blockUser(u.id, "ordering")} className="rounded-lg cursor-pointer font-medium">Disable Ordering</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => blockUser(u.id, "full")} className="text-red-600 rounded-lg cursor-pointer font-bold mt-1">Full Ban</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
-                      <Button variant="outline" className="flex-1 h-7 text-xs text-success border-success/30" onClick={() => blockUser(u.id, "none")}>Unblock</Button>
+                      <Button variant="outline" className="w-full h-9 text-xs font-bold rounded-xl text-emerald-600 border-emerald-600/30 hover:bg-emerald-600 hover:text-white shadow-sm" onClick={() => blockUser(u.id, "none")}><ShieldCheck className="w-3.5 h-3.5 mr-1" /> Restore Access</Button>
                     )}
-                    <Button variant="outline" size="icon" className="h-7 w-8 text-destructive" onClick={() => deleteUser(u.id)}><Trash2 className="h-3 w-3" /></Button>
+                    </div>
+                    <Button variant="outline" size="icon" className="h-9 w-10 text-red-600 rounded-xl border border-red-600/30 hover:bg-red-600 hover:text-white shadow-sm shrink-0" onClick={() => deleteUser(u.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              )
+            })}
+          </div>
+
+          <div className="hidden print:block text-black">
+            <div className="mb-6 flex flex-col items-center border-b-2 border-black pb-4">
+              <h2 className="text-3xl font-black uppercase tracking-widest text-black">BAUST TEA BAR</h2>
+              <p className="text-lg font-bold text-gray-600 mt-1">Users Directory</p>
+              <div className="flex w-full justify-between mt-4 text-xs font-bold text-gray-500">
+                <span>Total Users: {filteredUsers.length}</span>
+                <span>Generated: {new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
+            <table className="w-full text-sm border-collapse text-black">
+              <thead>
+                <tr className="border-b-2 border-black bg-gray-100 !print:bg-gray-100">
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Name</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Email</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Dept</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Designation</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Phone</th>
+                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map(u => (
+                  <tr key={u.id} className="border-b border-gray-300 break-inside-avoid">
+                    <td className="p-3 font-bold">{u.name}</td>
+                    <td className="p-3 text-gray-700">{u.email}</td>
+                    <td className="p-3 text-gray-700">{u.department}</td>
+                    <td className="p-3 text-gray-600">{u.designation}</td>
+                    <td className="p-3 font-medium border-l border-gray-200">{u.phone}</td>
+                    <td className="p-3 capitalize font-bold text-gray-600 border-l border-gray-200">
+                      {u.role === 'admin' ? 'Admin' : (u.blocked && u.blocked !== 'none' ? 'Restricted' : 'Member')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </TabsContent>
       </Tabs>
@@ -414,7 +644,7 @@ export default function AdminDashboard() {
              <Textarea value={formDesc} onChange={e=>setFormDesc(e.target.value)} placeholder="Description" rows={2} className="text-sm bg-muted/30 resize-none" />
              <div className="grid grid-cols-2 gap-3">
                <Input type="number" value={formPrice} onChange={e=>setFormPrice(e.target.value)} placeholder="Price (৳)" className="h-10 text-sm bg-muted/30" />
-               <Select value={formCategory} onValueChange={(v:any)=>setFormCategory(v)}>
+               <Select value={formCategory} onValueChange={(v: "tea" | "snack" | "meal")=>setFormCategory(v)}>
                  <SelectTrigger className="h-10 text-sm bg-muted/30"><SelectValue /></SelectTrigger>
                  <SelectContent>
                    <SelectItem value="tea">Tea</SelectItem><SelectItem value="snack">Snack</SelectItem><SelectItem value="meal">Meal</SelectItem>

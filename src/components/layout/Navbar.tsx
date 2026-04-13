@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Bell, LogOut, Menu, Moon, Sun, User, X, Home } from "lucide-react";
+import { Bell, LogOut, Menu, Moon, Sun, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth-context";
 import { useAppState } from "@/lib/app-state";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo-new.jpg";
 
 export function Navbar() {
   const { user, isAdmin, logout, isAuthenticated } = useAuth();
@@ -53,10 +53,12 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
-      <div className="container flex h-14 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-          <img src={logo} alt="BAUST Tea Bar" className="h-8 w-8" />
-          <span className="font-heading text-lg font-bold text-primary">BAUST Tea Bar</span>
+      <div className="container flex h-16 items-center justify-between px-4">
+        <Link to="/" className="flex items-center gap-3 flex-shrink-0 group">
+          <div className="h-10 w-10 md:h-12 md:w-12 rounded-full overflow-hidden shadow-sm group-hover:scale-105 transition-transform duration-300">
+            <img src={logo} alt="BAUST Tea Bar" className="h-full w-full object-cover" />
+          </div>
+          <span className="font-heading text-xl md:text-2xl font-extrabold text-foreground tracking-tight uppercase">BAUST Tea Bar</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
@@ -92,7 +94,7 @@ export function Navbar() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 bg-primary/10 text-primary overflow-hidden">
+              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 bg-primary/10 text-primary overflow-hidden ml-1">
                 {user?.avatar ? (
                   <img src={user.avatar} alt={user.name} className="w-full h-full object-cover rounded-full" />
                 ) : (
@@ -109,34 +111,45 @@ export function Navbar() {
               <DropdownMenuItem onClick={() => navigate("/profile")}>
                 <User className="mr-2 h-4 w-4" /> Profile
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" /> Logout
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setMobileOpen(!mobileOpen)}>
+          <Button variant="ghost" size="sm" onClick={handleLogout} className="hidden md:flex text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-2 ml-1">
+            <LogOut className="h-4 w-4" />
+            <span className="text-sm font-medium">Logout</span>
+          </Button>
+
+          <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 ml-1" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden border-t bg-card animate-slide-up">
+        <div className="md:hidden border-t bg-card animate-slide-up shadow-lg">
           <div className="flex flex-col p-3 gap-1">
             {navLinks.map(link => (
               <Link
                 key={link.to}
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
-                className={`px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                className={`px-4 py-3 rounded-md text-sm font-medium transition-colors ${
                   isActive(link.to) ? "bg-primary/10 text-primary" : "hover:bg-muted"
                 }`}
               >
                 {link.label}
               </Link>
             ))}
+            <button
+              onClick={() => {
+                setMobileOpen(false);
+                handleLogout();
+              }}
+              className="mt-2 flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors text-left"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
           </div>
         </div>
       )}

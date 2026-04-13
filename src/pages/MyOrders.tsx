@@ -44,7 +44,7 @@ export default function MyOrders() {
             <ShoppingBag className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight">My Orders</h1>
+            <h1 className="font-heading font-black text-3xl sm:text-4xl uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent drop-shadow-sm pb-1">My Orders</h1>
           </div>
         </div>
 
@@ -62,7 +62,7 @@ export default function MyOrders() {
       {myOrders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center bg-card border rounded-2xl border-dashed">
           <Clock className="h-10 w-10 mb-3 text-muted-foreground opacity-30" />
-          <h3 className="text-lg font-bold font-heading mt-2">{searchQuery ? "No matching orders found" : "No History"}</h3>
+          <h3 className="text-xl font-black font-heading mt-2 text-muted-foreground uppercase">{searchQuery ? "No matching orders found" : "No History"}</h3>
           <p className="text-muted-foreground text-sm mt-1">{searchQuery ? "Try a different search." : "Place orders in the catalog first."}</p>
         </div>
       ) : (
@@ -109,7 +109,7 @@ export default function MyOrders() {
                   <div className="flex justify-between items-center mt-4 pt-3 border-t">
                     <span className="font-bold text-sm text-primary">Order Total: ৳{order.total}</span>
                     {order.status === "pending" && (
-                      <Button variant="outline" size="sm" className="rounded-xl px-4 h-8 text-xs border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300" onClick={() => handleCancel(order.id)}>
+                      <Button variant="outline" size="sm" className="rounded-xl px-4 h-8 text-xs text-red-600 border-red-600/30 hover:bg-red-600 hover:text-white" onClick={() => handleCancel(order.id)}>
                         <Ban className="w-3 w-3 mr-1" /> Cancel
                       </Button>
                     )}

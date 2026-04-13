@@ -3,12 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-import { ArrowRight, Coffee, ShieldCheck } from "lucide-react";
-import logo from "@/assets/logo.png";
+import { Coffee, UserPlus } from "lucide-react";
+import logo from "@/assets/logo-new.jpg";
 
 const DEPARTMENTS = ["CSE", "EEE", "ICT", "ME", "IPE", "Civil Engineering (CE)", "DBA", "AIS", "English", "Department of Arts and Sciences (Bangla, English, Physics, Math, Chemistry, Sociology)"];
 
@@ -26,7 +25,7 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone || !email || !designation || !department || !password) {
-      toast.error("All parameters required.");
+      toast.error("All fields are required.");
       return;
     }
     setLoading(true);
@@ -34,7 +33,7 @@ export default function Register() {
     setLoading(false);
 
     if (result.success) {
-      toast.success("Identity established! You may now sign in.");
+      toast.success("Account created! You may now sign in.");
       navigate("/login");
     } else {
       toast.error(result.message || "Registration failed.");
@@ -42,76 +41,68 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-8 px-4 bg-gradient-to-br from-emerald-500/10 via-background to-cyan-500/10 animate-in fade-in relative overflow-hidden">
-      
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
-         <div className="absolute top-[-5%] left-[-5%] w-72 h-72 rounded-full bg-emerald-500/10 blur-[80px]"></div>
-         <div className="absolute bottom-[-5%] right-[-5%] w-72 h-72 rounded-full bg-cyan-500/10 blur-[80px]"></div>
-      </div>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none"></div>
 
-      <Card className="w-full max-w-md border-0 shadow-xl rounded-3xl bg-card/90 backdrop-blur-md relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-500 to-cyan-500"></div>
+      <div className="w-full max-w-[500px] border border-border/50 shadow-2xl rounded-[2rem] bg-card/95 backdrop-blur-xl relative z-10 p-6 sm:p-10">
         
-        <CardContent className="p-6 sm:p-8 text-center shadow-inner">
-          <div className="flex justify-center mb-3">
-             <div className="w-16 h-16 bg-gradient-to-br from-muted to-muted/50 rounded-2xl flex items-center justify-center shadow-inner border border-white/10 group">
-                <img src={logo} alt="Logo" className="h-10 w-10 group-hover:scale-105 transition-transform" />
-             </div>
+        <div className="flex flex-col items-center mb-8">
+          <div className="rounded-full shadow-xl h-28 w-28 sm:h-32 sm:w-32 flex items-center justify-center mb-5 overflow-hidden">
+            <img src={logo} alt="BAUST Tea Bar logo" className="h-full w-full object-cover" />
           </div>
-          
-          <div className="mb-6">
-            <h1 className="font-heading text-2xl font-extrabold tracking-tight mb-1">Create Account</h1>
-            <p className="text-muted-foreground font-medium text-xs flex items-center justify-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-emerald-500"/> Secure operations</p>
+          <h1 className="font-heading text-3xl font-extrabold tracking-tight text-foreground uppercase mb-1">Create Account</h1>
+          <p className="text-muted-foreground text-sm font-medium">Join BAUST Tea Bar today</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Full Name</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Dr. John Doe" required className="h-11 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Phone Number</Label>
+              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="017..." required className="h-11 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all rounded-xl" />
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 text-left">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="uppercase text-[9px] font-bold text-muted-foreground ml-1">Name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Dr. John" required className="h-10 rounded-xl bg-muted/30 text-sm px-3" />
-              </div>
-              <div className="space-y-1">
-                <Label className="uppercase text-[9px] font-bold text-muted-foreground ml-1">Phone</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+88017" required className="h-10 rounded-xl bg-muted/30 text-sm px-3" />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label className="uppercase text-[9px] font-bold text-muted-foreground ml-1">Email</Label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@baust.edu.bd" required className="h-10 rounded-xl bg-muted/30 text-sm px-3" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="uppercase text-[9px] font-bold text-muted-foreground ml-1">Title</Label>
-                <Input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="Lecturer" required className="h-10 rounded-xl bg-muted/30 text-sm px-3" />
-              </div>
-              <div className="space-y-1">
-                <Label className="uppercase text-[9px] font-bold text-muted-foreground ml-1">Dept</Label>
-                <Select value={department} onValueChange={setDepartment} required>
-                  <SelectTrigger className="h-10 rounded-xl bg-muted/30 text-sm px-3"><SelectValue placeholder="-" /></SelectTrigger>
-                  <SelectContent>
-                    {DEPARTMENTS.map((d) => <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label className="uppercase text-[9px] font-bold text-muted-foreground ml-1">Password</Label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min 6 char" required className="h-10 rounded-xl bg-muted/30 text-sm px-3" />
-            </div>
-
-            <Button type="submit" className="w-full h-12 rounded-xl font-bold text-sm shadow-md mt-2 bg-gradient-to-r from-emerald-500 to-cyan-500 border-none" disabled={loading}>
-              {loading ? <Coffee className="mr-2 h-4 w-4 animate-spin" /> : <span className="flex items-center gap-1.5">Register <ArrowRight className="w-4 h-4"/></span>}
-            </Button>
-          </form>
-
-          <div className="mt-6 pt-4 border-t text-xs font-medium text-muted-foreground">
-            Already verified? <Link to="/login" className="text-primary font-bold hover:underline">Sign In</Link>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Email Address</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@baust.edu.bd" required className="h-11 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all rounded-xl" />
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Designation</Label>
+              <Input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. Lecturer" required className="h-11 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Department</Label>
+              <Select value={department} onValueChange={setDepartment} required>
+                <SelectTrigger className="h-11 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all rounded-xl">
+                  <SelectValue placeholder="Select dept" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DEPARTMENTS.map((d) => <SelectItem key={d} value={d} className="truncate max-w-[80vw] sm:max-w-none">{d}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Password</Label>
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimum 6 characters" required className="h-11 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all rounded-xl" />
+          </div>
+
+          <Button type="submit" className="w-full h-12 text-base font-semibold mt-2 rounded-xl shadow-lg hover:shadow-primary/25 transition-all" disabled={loading}>
+            {loading ? <Coffee className="mr-2 h-5 w-5 animate-spin" /> : <span className="flex items-center gap-2">Create Account <UserPlus className="w-4 h-4"/></span>}
+          </Button>
+        </form>
+
+        <div className="mt-8 text-center text-sm text-muted-foreground">
+          Already have an account? <Link to="/login" className="text-primary font-semibold hover:underline">Sign in</Link>
+        </div>
+      </div>
     </div>
   );
 }

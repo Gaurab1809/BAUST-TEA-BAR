@@ -28,7 +28,7 @@ export default function Billing() {
       <div className="p-6 rounded-3xl bg-gradient-to-br from-rose-500 to-orange-500 text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <Badge className="bg-white/20 text-white border-0 backdrop-blur-md mb-2 text-[10px] uppercase font-bold px-2 py-0.5 shadow-sm">Ledger</Badge>
-          <h1 className="font-heading text-2xl sm:text-3xl font-extrabold mb-1">My Billing</h1>
+          <h1 className="font-heading font-black text-3xl sm:text-4xl pb-1 uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent drop-shadow-sm mb-1">My Billing</h1>
           <p className="text-white/80 font-medium text-sm">Monthly expenses, payments, and debts.</p>
         </div>
         

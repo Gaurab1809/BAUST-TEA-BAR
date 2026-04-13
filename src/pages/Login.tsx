@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Coffee, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Coffee, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo-new.jpg";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -32,55 +31,47 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-500/10 via-background to-purple-500/10 animate-in fade-in relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none"></div>
       
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
-         <div className="absolute top-[-5%] right-[-5%] w-64 h-64 rounded-full bg-primary/10 blur-[80px]"></div>
-         <div className="absolute bottom-[-5%] left-[-5%] w-64 h-64 rounded-full bg-accent/10 blur-[80px]"></div>
-      </div>
-
-      <Card className="w-full max-w-sm border-0 shadow-xl rounded-3xl bg-card/90 backdrop-blur-md relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-accent"></div>
+      <div className="w-full max-w-[400px] border border-border/50 shadow-2xl rounded-[2rem] bg-card/95 backdrop-blur-xl relative z-10 p-6 sm:p-8">
         
-        <CardContent className="p-6 sm:p-8 text-center space-y-4 shadow-inner">
-          <div className="flex justify-center mb-2">
-             <div className="w-16 h-16 bg-gradient-to-br from-muted to-muted/50 rounded-2xl flex items-center justify-center shadow-inner border border-white/10 group">
-                <img src={logo} alt="Logo" className="h-10 w-10 group-hover:scale-105 transition-transform" />
-             </div>
+        <div className="flex flex-col items-center mb-8">
+          <div className="rounded-full shadow-2xl h-36 w-36 sm:h-40 sm:w-40 flex items-center justify-center mb-6 overflow-hidden">
+            <img src={logo} alt="BAUST Tea Bar logo" className="h-full w-full object-cover" />
+          </div>
+          <h1 className="font-heading text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground uppercase mb-1">BAUST TEA BAR</h1>
+          <p className="text-muted-foreground text-sm font-medium">Enter your credentials to access your account</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-sm font-medium">Email address</Label>
+            <Input id="email" type="email" placeholder="you@baust.edu.bd" value={email} onChange={e => setEmail(e.target.value)} className="h-12 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all rounded-xl" />
           </div>
           
-          <div>
-            <h1 className="font-heading text-2xl font-extrabold tracking-tight">Welcome Back</h1>
-            <p className="text-muted-foreground font-medium text-xs mt-1">Access your dashboard</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4 text-left mt-6">
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="uppercase tracking-wide text-[10px] font-bold text-muted-foreground ml-1">Email</Label>
-              <Input id="email" type="email" placeholder="you@baust.edu.bd" value={email} onChange={e => setEmail(e.target.value)} className="h-12 rounded-xl bg-muted/30 focus:bg-background text-sm px-4" />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+              <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">Forgot password?</Link>
             </div>
-            
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="uppercase tracking-wide text-[10px] font-bold text-muted-foreground ml-1">Password</Label>
-              <div className="relative">
-                <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} className="h-12 rounded-xl bg-muted/30 focus:bg-background text-sm px-4 pr-10" />
-                <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 h-10 w-10 text-muted-foreground" onClick={() => setShowPassword(!showPassword)}>
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              </div>
+            <div className="relative">
+              <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} className="h-12 bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all rounded-xl pr-10" />
+              <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 h-10 w-10 text-muted-foreground" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
             </div>
-            
-            <Button type="submit" className="w-full h-12 rounded-xl font-bold text-sm shadow-md mt-2" disabled={loading}>
-              {loading ? <Coffee className="mr-2 h-4 w-4 animate-spin" /> : <span className="flex items-center gap-1.5">Sign In <ArrowRight className="w-4 h-4"/></span>}
-            </Button>
-          </form>
-
-          <div className="pt-4 border-t flex flex-col gap-2 text-xs text-muted-foreground font-medium mt-6">
-             <Link to="/forgot-password" className="hover:text-primary transition-colors">Forgot password?</Link>
-             <span>New here? <Link to="/register" className="text-primary font-bold hover:underline">Create Account</Link></span>
           </div>
-        </CardContent>
-      </Card>
+          
+          <Button type="submit" className="w-full h-12 text-base font-semibold mt-2 rounded-xl shadow-lg hover:shadow-primary/25 transition-all" disabled={loading}>
+            {loading ? <Coffee className="mr-2 h-5 w-5 animate-spin" /> : <span className="flex items-center gap-2">Sign In <LogIn className="w-4 h-4"/></span>}
+          </Button>
+        </form>
+
+        <div className="mt-8 text-center text-sm text-muted-foreground">
+          Don't have an account? <Link to="/register" className="text-primary font-semibold hover:underline">Sign up</Link>
+        </div>
+      </div>
     </div>
   );
 }

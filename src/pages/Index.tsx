@@ -50,7 +50,7 @@ export default function Index() {
               <div className="p-2.5 rounded-xl bg-emerald-500 text-white w-fit shadow-sm mb-3">
                 <Coffee className="h-5 w-5" />
               </div>
-              <h3 className="font-heading font-extrabold text-xl mb-1 text-foreground">Order Catalog</h3>
+              <h3 className="font-heading font-black text-2xl uppercase tracking-wider mb-1 text-foreground drop-shadow-sm">Menu</h3>
               <p className="text-muted-foreground text-sm font-medium mb-3">{menuItems.length} items available</p>
               <div className="flex items-center text-emerald-600 dark:text-emerald-400 font-bold text-xs">
                 Explore Menu <ArrowRight className="h-3 w-3 ml-1 group-hover:translate-x-1 transition-transform" />
@@ -70,7 +70,7 @@ export default function Index() {
                 </div>
                 {pendingOrders > 0 && <Badge className="bg-rose-500 text-white text-[10px] shadow-sm border-0">{pendingOrders} Active</Badge>}
               </div>
-              <h3 className="font-heading font-extrabold text-xl mb-1 text-foreground">My Orders</h3>
+              <h3 className="font-heading font-black text-2xl uppercase tracking-wider mb-1 text-foreground drop-shadow-sm">My Orders</h3>
               <p className="text-muted-foreground text-sm font-medium mb-3">Track your pending orders</p>
               <div className="flex items-center text-blue-600 dark:text-blue-400 font-bold text-xs">
                 View Tracker <ArrowRight className="h-3 w-3 ml-1 group-hover:translate-x-1 transition-transform" />
@@ -87,7 +87,7 @@ export default function Index() {
               <div className="p-2.5 rounded-xl bg-rose-500 text-white w-fit shadow-sm mb-3">
                 <CreditCard className="h-5 w-5" />
               </div>
-              <h3 className="font-heading font-extrabold text-xl mb-1 text-foreground">Billing</h3>
+              <h3 className="font-heading font-black text-2xl uppercase tracking-wider mb-1 text-foreground drop-shadow-sm">Billing</h3>
               <div className="flex items-center gap-1.5 mb-3 text-sm">
                  <span className="text-muted-foreground font-medium">Owed:</span>
                  <span className={`font-bold ${dueAmount > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>৳{dueAmount}</span>
@@ -102,11 +102,11 @@ export default function Index() {
         {/* Popular Items Showcase */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-heading text-lg font-bold flex items-center gap-2">
+            <h2 className="font-heading font-black text-2xl md:text-3xl flex items-center gap-3 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider mb-4 drop-shadow-sm">
               <TrendingUp className="h-5 w-5 text-primary" /> Popular Items
             </h2>
-            <Button variant="ghost" size="sm" className="rounded-full text-primary text-xs hover:bg-primary/10 px-3 h-8" onClick={() => navigate("/order")}>
-              View All <ArrowRight className="h-3 w-3 ml-1" />
+            <Button variant="outline" size="sm" className="rounded-full text-primary text-xs hover:bg-primary hover:text-primary-foreground border-primary/20 px-4 h-8 shadow-sm transition-all" onClick={() => navigate("/order")}>
+              View All <ArrowRight className="h-3 w-3 ml-1.5" />
             </Button>
           </div>
           
