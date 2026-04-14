@@ -43,7 +43,6 @@ export function Navbar() {
 
   const navLinks = [
     { to: "/", label: "Home" },
-    { to: "/order", label: "Order" },
     { to: "/my-orders", label: "My Orders" },
     { to: "/billing", label: "Billing" },
     ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),

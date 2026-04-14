@@ -10,7 +10,6 @@ import { Navbar } from "@/components/layout/Navbar";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import OrderPage from "./pages/OrderPage";
 import MyOrders from "./pages/MyOrders";
 import Billing from "./pages/Billing";
 import Notifications from "./pages/Notifications";
@@ -39,7 +38,7 @@ function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-        <Route path="/order" element={<ProtectedRoute><OrderPage /></ProtectedRoute>} />
+        <Route path="/order" element={<Navigate to="/" replace />} />
         <Route path="/my-orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
         <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
