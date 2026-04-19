@@ -111,10 +111,11 @@ The purpose of **BAUST TEA BAR** is to:
 <img src="https://capsule-render.vercel.app/api?type=waving&text=⚙️%20Operating+Environment&fontSize=32&width=1200&height=130&color=0:FC5C7D,100:FF416C" width="100%">
 
 - 🌐 Platform: Web-based  
-- 🏗️ Architecture: Client-Server  
-- 💻 Frontend: React / HTML / JS  
+- 🏗️ Architecture: Client-Server
+- 🆔 Authentication: Firebase   
+- 💻 Frontend: React / HTML / JS / Tailwind CSS / Typescript 
 - 🖥️ Backend: Express.js  
-- 🗄️ Database: MongoDB  
+- 🗄️ Database: Firestore, SQLLite  
 - 🖥️ OS: Cross-platform  
 
 <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
