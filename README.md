@@ -4,10 +4,9 @@
 </p>
 
 <!-- Title centered and blue -->
-<h1 align="center">
-  <span style="color:blue; font-size:36px; font-weight:bold;">☕ BAUST TEA BAR – Food Ordering System</span>
+<h1 align="center" style="font-size:42px; font-weight:900; background: linear-gradient(90deg, #ff512f, #dd2476, #1e90ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 2px 2px 8px rgba(0,0,0,0.2);">
+  ☕ BAUST TEA BAR ☕
 </h1>
-
 <h3 align="center">
   <b style="color:purple;">🍽️ A Secure Food & Tea Ordering Platform for BAUST Faculty and Authority</b>
 </h3>
