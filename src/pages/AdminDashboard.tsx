@@ -574,8 +574,10 @@ export default function AdminDashboard() {
                   </div>
                 </div>
              )}
-             <div className={`bg-white text-black w-full max-w-5xl ${previewMode === "orders" ? "p-8 sm:p-12 mb-8 rounded-3xl shadow-2xl border relative print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none" : ""}`}>
-               {renderPrintOrders()}
+             <div className={`bg-white text-black w-full max-w-5xl ${previewMode === "orders" ? "p-4 sm:p-12 mb-8 rounded-3xl shadow-2xl border relative overflow-x-auto print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none print:overflow-visible" : ""}`}>
+               <div className="min-w-[800px] print:min-w-full">
+                 {renderPrintOrders()}
+               </div>
              </div>
           </div>
         </TabsContent>
@@ -645,8 +647,10 @@ export default function AdminDashboard() {
                   </div>
                 </div>
              )}
-             <div className={`bg-white text-black w-full max-w-5xl ${previewMode === "menu" ? "p-8 sm:p-12 mb-8 rounded-3xl shadow-2xl border relative print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none" : ""}`}>
-               {renderPrintMenu()}
+             <div className={`bg-white text-black w-full max-w-5xl ${previewMode === "menu" ? "p-4 sm:p-12 mb-8 rounded-3xl shadow-2xl border relative overflow-x-auto print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none print:overflow-visible" : ""}`}>
+               <div className="min-w-[800px] print:min-w-full">
+                 {renderPrintMenu()}
+               </div>
              </div>
           </div>
         </TabsContent>
@@ -720,8 +724,10 @@ export default function AdminDashboard() {
                   </div>
                 </div>
              )}
-             <div className={`bg-white text-black w-full max-w-5xl ${previewMode === "billing" ? "p-8 sm:p-12 mb-8 rounded-3xl shadow-2xl border relative print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none" : ""}`}>
-               {renderPrintBilling()}
+             <div className={`bg-white text-black w-full max-w-5xl ${previewMode === "billing" ? "p-4 sm:p-12 mb-8 rounded-3xl shadow-2xl border relative overflow-x-auto print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none print:overflow-visible" : ""}`}>
+               <div className="min-w-[800px] print:min-w-full">
+                 {renderPrintBilling()}
+               </div>
              </div>
           </div>
         </TabsContent>
@@ -831,8 +837,10 @@ export default function AdminDashboard() {
                   </div>
                 </div>
              )}
-             <div className={`bg-white text-black w-full max-w-5xl ${previewMode === "users" ? "p-8 sm:p-12 mb-8 rounded-3xl shadow-2xl border relative print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none" : ""}`}>
-               {renderPrintUsers()}
+             <div className={`bg-white text-black w-full max-w-5xl ${previewMode === "users" ? "p-4 sm:p-12 mb-8 rounded-3xl shadow-2xl border relative overflow-x-auto print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none print:overflow-visible" : ""}`}>
+               <div className="min-w-[800px] print:min-w-full">
+                 {renderPrintUsers()}
+               </div>
              </div>
           </div>
         </TabsContent>
