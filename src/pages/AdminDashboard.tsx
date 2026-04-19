@@ -109,6 +109,7 @@ export default function AdminDashboard() {
     const daysDiff = Math.floor(msDiff / (1000 * 3600 * 24));
     
     if (range === "today") return daysDiff === 0;
+    if (range === "tomorrow") return daysDiff === -1;
     if (range === "yesterday") return daysDiff === 1;
     if (range === "week") return daysDiff <= 7 && daysDiff >= 0;
     if (range === "month") return date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
@@ -213,7 +214,7 @@ export default function AdminDashboard() {
             <h2 className="text-3xl font-black uppercase tracking-widest bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">BAUST TEA BAR</h2>
             <p className="text-lg font-extrabold text-gray-700 mt-0.5">
               {orderFilter !== 'all' && <span className="capitalize text-primary">{orderFilter} </span>}
-              {/^\d{4}-\d{2}$/.test(orderDateFilter) ? new Date(`${orderDateFilter}-01`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : orderDateFilter === 'today' ? 'Daily' : orderDateFilter === 'yesterday' ? "Yesterday's" : orderDateFilter === 'week' ? 'Weekly' : orderDateFilter === 'month' ? 'Monthly' : 'All-Time'} Orders Report
+              {/^\d{4}-\d{2}$/.test(orderDateFilter) ? new Date(`${orderDateFilter}-01`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : orderDateFilter === 'today' ? 'Daily' : orderDateFilter === 'tomorrow' ? "Tomorrow's" : orderDateFilter === 'yesterday' ? "Yesterday's" : orderDateFilter === 'week' ? 'Weekly' : orderDateFilter === 'month' ? 'Monthly' : 'All-Time'} Orders Report
             </p>
           </div>
         </div>
@@ -476,6 +477,7 @@ export default function AdminDashboard() {
                 <SelectContent>
                   <SelectItem value="all">All Time</SelectItem>
                   <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="tomorrow">Tomorrow</SelectItem>
                   <SelectItem value="yesterday">Yesterday</SelectItem>
                   <SelectItem value="week">Last 7 Days</SelectItem>
                   <SelectItem value="month">This Month</SelectItem>
