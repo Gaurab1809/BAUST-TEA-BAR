@@ -144,7 +144,7 @@ export function Navbar() {
                 setMobileOpen(false);
                 handleLogout();
               }}
-              className="mt-2 flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors text-left"
+              className="mt-2 flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 transition-all duration-200 active:scale-[0.98] select-none touch-manipulation text-left"
             >
               <LogOut className="h-4 w-4" />
               Logout

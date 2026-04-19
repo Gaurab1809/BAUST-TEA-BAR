@@ -805,7 +805,7 @@ export default function AdminDashboard() {
                     {(!u.blocked || u.blocked === "none") ? (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="w-full h-9 text-xs rounded-xl shadow-sm border border-border/50 font-bold" size="sm">Manage Rights</Button>
+                          <Button className="w-full h-9 text-xs rounded-xl font-bold bg-gradient-to-r from-[hsl(30,75%,55%)] to-[hsl(32,85%,50%)] hover:from-[hsl(32,90%,55%)] hover:to-[hsl(30,80%,60%)] text-[hsl(24,10%,8%)] shadow-md shadow-[hsl(30,75%,55%)]/30 hover:shadow-lg hover:shadow-[hsl(30,75%,55%)]/50 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98] border-none transition-all duration-300 ease-out" size="sm">Manage Rights</Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="center" className="rounded-xl border-border/50 shadow-xl w-[200px]">
                           <DropdownMenuItem onClick={() => blockUser(u.id, "ordering")} className="rounded-lg cursor-pointer font-medium">Disable Ordering</DropdownMenuItem>
@@ -882,7 +882,7 @@ export default function AdminDashboard() {
 
              <div className="flex flex-wrap gap-1 mt-1">
                 {WORKING_DAYS.map(day => (
-                  <button key={day} type="button" onClick={() => toggleDay(day)} className={`px-2 py-1 text-[10px] rounded-md border ${formDays.includes(day) ? 'bg-primary text-white border-primary' : 'bg-background'}`}>{day.slice(0,3)}</button>
+                  <button key={day} type="button" onClick={() => toggleDay(day)} className={`px-2 py-1 text-[10px] rounded-md border transition-all duration-200 active:scale-95 touch-manipulation select-none ${formDays.includes(day) ? 'bg-primary text-white border-primary shadow-sm' : 'bg-background hover:bg-muted'}`}>{day.slice(0,3)}</button>
                 ))}
              </div>
           </div>
