@@ -1,6 +1,6 @@
 <!-- Logo on top -->
 <p align="center">
-  <img src="BAUST_TEA_BAR_Logo.png" alt="BAUST Tea Bar Logo" width="600"/>
+  <img src="BAUST_TEA_BAR.jpeg" alt="BAUST Tea Bar Logo" width="600"/>
 </p>
 
 <!-- Title centered and blue -->
