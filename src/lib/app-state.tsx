@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
 import { MenuItem, Order, OrderItem, MonthlyBill, Notification, DayOfWeek, User, MENU_ITEMS as INITIAL_MENU } from "./mock-data";
 import { db } from "./firebase";
-import { collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, updateDoc, getDocs, getDoc, increment, writeBatch } from "firebase/firestore";
+import { collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, updateDoc, getDocs, getDoc, increment, writeBatch, query, orderBy, limit } from "firebase/firestore";
 
 interface AppState {
   // Menu
@@ -17,11 +17,13 @@ interface AppState {
   confirmOrder: (orderId: string) => void;
   rejectOrder: (orderId: string) => void;
   completeOrder: (orderId: string) => void;
+  updateOrderTotal: (orderId: string, newTotal: number) => void;
 
   // Bills
   bills: MonthlyBill[];
   markBillPaid: (billId: string) => void;
   markBillPartial: (billId: string, amount: number) => void;
+  updateBillTotal: (billId: string, newTotal: number) => void;
 
   // Notifications
   notifications: Notification[];
@@ -66,10 +68,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    const unsubOrders = onSnapshot(collection(db, "orders"), (snapshot) => {
+    const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(500)), (snapshot) => {
       const items = snapshot.docs.map(d => ({ ...d.data(), id: d.id } as Order));
-      // Sort by latest first
-      items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setOrders(items);
     });
 
@@ -77,9 +77,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setBills(snapshot.docs.map(d => ({ ...d.data(), id: d.id } as MonthlyBill)));
     });
 
-    const unsubNotifs = onSnapshot(collection(db, "notifications"), (snapshot) => {
+    const unsubNotifs = onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(100)), (snapshot) => {
       const items = snapshot.docs.map(d => ({ ...d.data(), id: d.id } as Notification));
-      items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setNotifications(items);
     });
 
@@ -208,6 +207,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     updateDoc(doc(db, "orders", orderId), { status: "completed" });
   }, []);
 
+  const updateOrderTotal = useCallback(async (orderId: string, newTotal: number) => {
+    await updateDoc(doc(db, "orders", orderId), { total: newTotal });
+  }, []);
+
   // -- BILLS --
   const markBillPaid = useCallback(async (billId: string) => {
     const b = bills.find(x => x.id === billId);
@@ -231,6 +234,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       status: isFullyPaid ? "paid" : "partial"
     });
   }, [bills]);
+
+  const updateBillTotal = useCallback(async (billId: string, newTotal: number) => {
+    await updateDoc(doc(db, "bills", billId), { totalAmount: newTotal });
+  }, []);
 
   // -- NOTIFICATIONS --
   const markNotificationRead = useCallback((notifId: string) => {
@@ -269,8 +276,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   return (
     <AppStateContext.Provider value={{
       menuItems, addMenuItem, updateMenuItem, deleteMenuItem,
-      orders, placeOrder, cancelOrder, confirmOrder, rejectOrder, completeOrder,
-      bills, markBillPaid, markBillPartial,
+      orders, placeOrder, cancelOrder, confirmOrder, rejectOrder, completeOrder, updateOrderTotal,
+      bills, markBillPaid, markBillPartial, updateBillTotal,
       notifications, markNotificationRead, markAllNotificationsRead, addNotification,
       users, addUser, deleteUser, updateUser, blockUser,
     }}>

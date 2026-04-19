@@ -51,7 +51,7 @@ export function Navbar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md print:hidden">
       <div className="container flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-3 flex-shrink-0 group">
           <div className="h-10 w-10 md:h-12 md:w-12 rounded-full overflow-hidden shadow-sm group-hover:scale-105 transition-transform duration-300">

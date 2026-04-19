@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Users, ShoppingBag, TrendingUp, Clock, CheckCircle, XCircle, Plus, Edit, Trash2, Download, Send, Ban, ShieldCheck, ShieldOff, Upload, Image as ImageIcon, ChevronRight, Search, Printer, Filter } from "lucide-react";
+import { Users, ShoppingBag, TrendingUp, Clock, CheckCircle, XCircle, Plus, Edit, Trash2, Download, Send, Ban, ShieldCheck, ShieldOff, Upload, Image as ImageIcon, ChevronRight, Search, Printer, Filter, Pencil, Check, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { useAppState } from "@/lib/app-state";
 import { MenuItem, WORKING_DAYS, DayOfWeek } from "@/lib/mock-data";
 
 import { getAccurateOrderDate } from "@/lib/utils";
+import logo from "@/assets/logo-new.jpg";
 
 const statusColors: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
@@ -45,8 +46,8 @@ function ExportButton({ data, filename }: { data: Record<string, unknown>[]; fil
   );
 }
 
-const PrintButton = () => (
-  <Button variant="outline" size="sm" onClick={() => window.print()} className="rounded-full shadow-sm hover:shadow transition-all group border-primary/20 hover:border-primary/50 text-xs h-8">
+const PrintButton = ({ onClick }: { onClick?: () => void }) => (
+  <Button variant="outline" size="sm" onClick={onClick || (() => window.print())} className="rounded-full shadow-sm hover:shadow transition-all group border-primary/20 hover:border-primary/50 text-xs h-8">
     <Printer className="h-3 w-3 mr-1.5" /> Print
   </Button>
 );
@@ -64,7 +65,7 @@ const SearchBar = ({ val, setVal, placeholder }: { val: string, setVal: (s:strin
 );
 
 export default function AdminDashboard() {
-  const { orders, confirmOrder, rejectOrder, completeOrder, menuItems, addMenuItem, updateMenuItem, deleteMenuItem, bills, markBillPaid, users, deleteUser, addNotification, blockUser } = useAppState();
+  const { orders, confirmOrder, rejectOrder, completeOrder, updateOrderTotal, menuItems, addMenuItem, updateMenuItem, deleteMenuItem, bills, markBillPaid, updateBillTotal, users, deleteUser, addNotification, blockUser } = useAppState();
   
   // Search queries
   const [orderQuery, setOrderQuery] = useState("");
@@ -73,10 +74,16 @@ export default function AdminDashboard() {
   const [userQuery, setUserQuery] = useState("");
 
   const [orderFilter, setOrderFilter] = useState("all");
+  const [orderDateFilter, setOrderDateFilter] = useState("all");
   const [billingMonth, setBillingMonth] = useState("all");
   const [menuCategory, setMenuCategory] = useState("all");
   const [billStatus, setBillStatus] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
+  
+  const [previewMode, setPreviewMode] = useState<"orders" | "menu" | "billing" | "users" | null>(null);
+  
+  const [editingOrderTotal, setEditingOrderTotal] = useState<Record<string, string>>({});
+  const [editingBillTotal, setEditingBillTotal] = useState<Record<string, string>>({});
 
   const [menuDialogOpen, setMenuDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -92,8 +99,29 @@ export default function AdminDashboard() {
   const [formDays, setFormDays] = useState<DayOfWeek[]>([]);
   const [formImage, setFormImage] = useState("");
   
+  const isWithinRange = (dateStr: string, range: string) => {
+    if (range === "all") return true;
+    const date = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
+    const msDiff = today.getTime() - date.getTime();
+    const daysDiff = Math.floor(msDiff / (1000 * 3600 * 24));
+    
+    if (range === "today") return daysDiff === 0;
+    if (range === "yesterday") return daysDiff === 1;
+    if (range === "week") return daysDiff <= 7 && daysDiff >= 0;
+    if (range === "month") return date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+    if (/^\d{4}-\d{2}$/.test(range)) {
+      const [y, m] = range.split('-');
+      return date.getFullYear() === parseInt(y, 10) && (date.getMonth() + 1) === parseInt(m, 10);
+    }
+    return true;
+  };
+
   const filteredOrders = orders.filter(o => 
     (orderFilter === "all" || o.status === orderFilter) &&
+    isWithinRange(o.date, orderDateFilter) &&
     (o.userName || "").toLowerCase().includes(orderQuery.toLowerCase())
   );
 
@@ -101,6 +129,11 @@ export default function AdminDashboard() {
     (menuCategory === "all" || m.category === menuCategory) &&
     (m.name || "").toLowerCase().includes(menuQuery.toLowerCase())
   );
+
+  const allOrderMonths = [...new Set(orders.map(o => {
+    const d = new Date(o.date);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }))].sort().reverse();
 
   const allBillingMonths = [...new Set(bills.map(b => b.month))];
   const filteredBills = bills.filter(b => 
@@ -165,8 +198,208 @@ export default function AdminDashboard() {
     toast.success("Sent"); setAnnouncementText(""); setAnnouncementOpen(false);
   };
 
-  const ordersExportData = orders.map(o => ({ User: o.userName, Date: o.date, Day: o.dayName, Items: o.items.map(i => `${i.menuItem.name}×${i.quantity}`).join("; "), Total: o.total, Status: o.status }));
+  const ordersExportData = orders.map(o => {
+    const user = users.find(u => u.id === o.userId);
+    return { User: o.userName, Department: user?.department || '', Designation: user?.designation || '', Date: o.date, Day: o.dayName, Items: o.items.map(i => `${i.menuItem.name}×${i.quantity}`).join("; "), Total: o.total, Status: o.status };
+  });
   const billsExportData = bills.map(b => ({ User: b.userName, Month: b.month, Orders: b.orders, Total: b.totalAmount, Paid: b.paidAmount, Status: b.status }));
+
+      const renderPrintOrders = () => (
+    <div className="text-black bg-white" style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}>
+      <div className="mb-6 flex items-center justify-between border-b-4 border-primary pb-4">
+        <div className="flex items-center gap-4">
+          <img src={logo} alt="Logo" className="w-16 h-16 rounded-full object-cover shadow-sm border border-gray-200" />
+          <div className="flex flex-col items-start">
+            <h2 className="text-3xl font-black uppercase tracking-widest bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">BAUST TEA BAR</h2>
+            <p className="text-lg font-extrabold text-gray-700 mt-0.5">
+              {orderFilter !== 'all' && <span className="capitalize text-primary">{orderFilter} </span>}
+              {/^\d{4}-\d{2}$/.test(orderDateFilter) ? new Date(`${orderDateFilter}-01`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : orderDateFilter === 'today' ? 'Daily' : orderDateFilter === 'yesterday' ? "Yesterday's" : orderDateFilter === 'week' ? 'Weekly' : orderDateFilter === 'month' ? 'Monthly' : 'All-Time'} Orders Report
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col items-end text-xs font-bold text-gray-600">
+          <span className="bg-primary/10 text-primary px-3 py-1 rounded-full mb-1 border border-primary/20">Total Found: {filteredOrders.length}</span>
+          <span>Generated: {new Date().toLocaleDateString()}</span>
+        </div>
+      </div>
+      <table className="w-full text-sm border-collapse rounded-xl overflow-hidden border border-gray-300">
+        <thead>
+          <tr className="bg-primary text-primary-foreground border-b-2 border-primary/20">
+            <th className="p-3 text-left font-extrabold uppercase text-xs tracking-wider">User</th>
+            <th className="p-3 text-left font-extrabold uppercase text-xs tracking-wider">Dept</th>
+            <th className="p-3 text-left font-extrabold uppercase text-xs tracking-wider">Desig.</th>
+            <th className="p-3 text-left font-extrabold uppercase text-xs tracking-wider">Date</th>
+            <th className="p-3 text-left font-extrabold uppercase text-xs tracking-wider w-1/3">Items</th>
+            <th className="p-3 text-left font-extrabold uppercase text-xs tracking-wider">Total</th>
+            <th className="p-3 text-left font-extrabold uppercase text-xs tracking-wider">Status</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white text-black">
+          {filteredOrders.map((order, idx) => {
+            const userDetail = users.find(u => u.id === order.userId);
+            return (
+            <tr key={order.id} className={`border-b border-gray-200 break-inside-avoid hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-primary/5' : 'bg-white'}`}>
+              <td contentEditable suppressContentEditableWarning className="p-3 font-extrabold text-gray-900 outline-primary cursor-text whitespace-normal break-words">{order.userName}</td>
+              <td contentEditable suppressContentEditableWarning className="p-3 text-gray-700 font-medium text-xs outline-primary cursor-text">{userDetail?.department || '-'}</td>
+              <td contentEditable suppressContentEditableWarning className="p-3 text-gray-700 font-medium text-xs outline-primary cursor-text">{userDetail?.designation || '-'}</td>
+              <td contentEditable suppressContentEditableWarning className="p-3 text-gray-700 font-semibold text-xs outline-primary cursor-text">{getAccurateOrderDate(order.date, order.dayName).toLocaleDateString()}</td>
+              <td contentEditable suppressContentEditableWarning className="p-3 text-sm leading-relaxed text-gray-800 font-semibold outline-primary cursor-text">{order.items.map(i => `${i.menuItem.name} ×${i.quantity}`).join(', ')}</td>
+              <td contentEditable suppressContentEditableWarning className="p-3 font-black text-gray-900 border-l border-gray-200 outline-primary cursor-text">৳{order.total}</td>
+              <td contentEditable suppressContentEditableWarning className="p-3 capitalize font-bold text-gray-600 border-l border-gray-200 text-xs outline-primary cursor-text">{order.status}</td>
+            </tr>
+          )})}
+        </tbody>
+      </table>
+    </div>
+  );
+
+      const renderPrintMenu = () => (
+    <div className="text-black bg-white" style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}>
+      <div className="mb-6 flex items-center justify-between border-b-4 border-primary pb-4">
+        <div className="flex items-center gap-4">
+          <img src={logo} alt="Logo" className="w-16 h-16 rounded-full object-cover shadow-sm border border-gray-200" />
+          <div className="flex flex-col items-start">
+            <h2 className="text-3xl font-black uppercase tracking-widest bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">BAUST TEA BAR</h2>
+            <p className="text-lg font-extrabold text-gray-700 mt-0.5">
+              {menuCategory !== 'all' && <span className="capitalize text-primary">{menuCategory} </span>}Menu Catalog
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col items-end text-xs font-bold text-gray-600">
+          <span className="bg-primary/10 text-primary px-3 py-1 rounded-full mb-1 border border-primary/20">Total Items: {filteredMenu.length}</span>
+          <span>Generated: {new Date().toLocaleDateString()}</span>
+        </div>
+      </div>
+      <table className="w-full text-sm border-collapse rounded-xl overflow-hidden border border-gray-300">
+        <thead>
+          <tr className="bg-primary text-primary-foreground border-b-2 border-primary/20">
+            <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Item Name</th>
+            <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Category</th>
+            <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Price</th>
+            <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Description</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white text-black">
+          {filteredMenu.map((item, idx) => (
+            <tr key={item.id} className={`border-b border-gray-200 break-inside-avoid hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-primary/5' : 'bg-white'}`}>
+              <td contentEditable suppressContentEditableWarning className="p-3 font-extrabold text-gray-900 outline-primary cursor-text">{item.name}</td>
+              <td contentEditable suppressContentEditableWarning className="p-3 capitalize text-gray-700 outline-primary cursor-text">
+                <span className="bg-gray-200 text-gray-800 px-2.5 py-1 rounded-md text-[11px] font-bold">{item.category}</span>
+              </td>
+              <td contentEditable suppressContentEditableWarning className="p-3 font-black text-gray-900 border-l border-gray-200 outline-primary cursor-text">৳{item.price}</td>
+              <td contentEditable suppressContentEditableWarning className="p-3 text-sm text-gray-700 font-semibold border-l border-gray-200 outline-primary cursor-text">{item.description}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+      const renderPrintBilling = () => (
+     <div className="text-black bg-white" style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}>
+        <div className="mb-6 flex items-center justify-between border-b-4 border-primary pb-4">
+          <div className="flex items-center gap-4">
+            <img src={logo} alt="Logo" className="w-16 h-16 rounded-full object-cover shadow-sm border border-gray-200" />
+            <div className="flex flex-col items-start">
+              <h2 className="text-3xl font-black uppercase tracking-widest bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">BAUST TEA BAR</h2>
+              <p className="text-lg font-extrabold text-gray-700 mt-0.5">
+                {billStatus !== 'all' && <span className="capitalize text-primary">{billStatus} </span>}Billing & Ledger Report
+                {billingMonth !== 'all' && ` - ${billingMonth}`}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end text-xs font-bold text-gray-600">
+            <span className="bg-primary/10 text-primary px-3 py-1 rounded-full mb-1 border border-primary/20">Total Bills: {filteredBills.length}</span>
+            <span>Generated: {new Date().toLocaleDateString()}</span>
+          </div>
+        </div>
+        <table className="w-full text-sm border-collapse rounded-xl overflow-hidden border border-gray-300">
+          <thead>
+            <tr className="bg-primary text-primary-foreground border-b-2 border-primary/20">
+              <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">User Name</th>
+              <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Month</th>
+              <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Orders</th>
+              <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Owed</th>
+              <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Paid</th>
+              <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Status</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white text-black">
+            {filteredBills.map((bill, idx) => {
+              const owesMoney = bill.status === 'unpaid';
+              const partialMoney = bill.status === 'partial';
+              const amountColor = owesMoney ? 'text-red-700' : partialMoney ? 'text-amber-600' : 'text-gray-900';
+              const statusColor = owesMoney ? 'text-red-700 bg-red-100 border border-red-200' : partialMoney ? 'text-amber-700 bg-amber-100 border border-amber-200' : 'text-emerald-800 bg-emerald-100 border border-emerald-200';
+              
+              return (
+              <tr key={bill.id} className={`border-b border-gray-200 break-inside-avoid hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-primary/5' : 'bg-white'}`}>
+                <td contentEditable suppressContentEditableWarning className="p-3 font-extrabold text-gray-900 outline-primary cursor-text">{bill.userName}</td>
+                <td contentEditable suppressContentEditableWarning className="p-3 text-gray-700 font-semibold outline-primary cursor-text">{bill.month}</td>
+                <td contentEditable suppressContentEditableWarning className="p-3 text-gray-700 font-medium outline-primary cursor-text">{bill.orders}</td>
+                <td contentEditable suppressContentEditableWarning className={`p-3 font-black border-l border-gray-200 outline-primary cursor-text ${amountColor}`}>৳{bill.totalAmount}</td>
+                <td contentEditable suppressContentEditableWarning className="p-3 font-black text-emerald-700 border-l border-gray-200 outline-primary cursor-text">৳{bill.paidAmount}</td>
+                <td contentEditable suppressContentEditableWarning className="p-3 border-l border-gray-200 outline-primary cursor-text">
+                  <span className={`px-2.5 py-1 rounded-md text-[11px] font-extrabold uppercase ${statusColor}`}>{bill.status}</span>
+                </td>
+              </tr>
+            )})}
+          </tbody>
+        </table>
+      </div>
+  );
+
+      const renderPrintUsers = () => (
+      <div className="text-black bg-white" style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}>
+        <div className="mb-6 flex items-center justify-between border-b-4 border-primary pb-4">
+          <div className="flex items-center gap-4">
+            <img src={logo} alt="Logo" className="w-16 h-16 rounded-full object-cover shadow-sm border border-gray-200" />
+            <div className="flex flex-col items-start">
+              <h2 className="text-3xl font-black uppercase tracking-widest bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">BAUST TEA BAR</h2>
+              <p className="text-lg font-extrabold text-gray-700 mt-0.5">
+                {userFilter !== 'all' && <span className="capitalize text-primary">{userFilter === 'admin' ? 'Admin ' : userFilter === 'restricted' ? 'Restricted ' : 'Member '}</span>}Users Directory
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end text-xs font-bold text-gray-600">
+            <span className="bg-primary/10 text-primary px-3 py-1 rounded-full mb-1 border border-primary/20">Total Users: {filteredUsers.length}</span>
+            <span>Generated: {new Date().toLocaleDateString()}</span>
+          </div>
+        </div>
+        <table className="w-full text-sm border-collapse rounded-xl overflow-hidden border border-gray-300">
+          <thead>
+            <tr className="bg-primary text-primary-foreground border-b-2 border-primary/20">
+              <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Name</th>
+              <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Email</th>
+              <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Dept</th>
+              <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Designation</th>
+              <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Phone</th>
+              <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Status</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white text-black">
+            {filteredUsers.map((u, idx) => {
+              const isAdmin = u.role === 'admin';
+              const isRestricted = u.blocked && u.blocked !== 'none';
+              const statusColor = isAdmin ? 'text-primary bg-primary/10 border border-primary/20' : isRestricted ? 'text-red-700 bg-red-100 border border-red-200' : 'text-emerald-800 bg-emerald-100 border border-emerald-200';
+              
+              return (
+              <tr key={u.id} className={`border-b border-gray-200 break-inside-avoid hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-primary/5' : 'bg-white'}`}>
+                <td contentEditable suppressContentEditableWarning className="p-3 font-extrabold text-gray-900 outline-primary cursor-text">{u.name}</td>
+                <td contentEditable suppressContentEditableWarning className="p-3 text-gray-700 font-semibold outline-primary cursor-text">{u.email}</td>
+                <td contentEditable suppressContentEditableWarning className="p-3 text-gray-700 font-medium outline-primary cursor-text">{u.department}</td>
+                <td contentEditable suppressContentEditableWarning className="p-3 text-gray-700 font-medium outline-primary cursor-text">{u.designation}</td>
+                <td contentEditable suppressContentEditableWarning className="p-3 font-bold text-gray-800 border-l border-gray-200 outline-primary cursor-text">{u.phone}</td>
+                <td contentEditable suppressContentEditableWarning className="p-3 border-l border-gray-200 outline-primary cursor-text">
+                  <span className={`px-2.5 py-1 rounded-md text-[11px] font-extrabold uppercase ${statusColor}`}>
+                    {isAdmin ? 'Admin' : isRestricted ? 'Restricted' : 'Member'}
+                  </span>
+                </td>
+              </tr>
+            )})}
+          </tbody>
+        </table>
+      </div>
+  );
 
 
 
@@ -219,7 +452,8 @@ export default function AdminDashboard() {
         </div>
 
         <TabsContent value="orders" className="space-y-4 animate-in">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
+          <div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
                <h3 className="font-heading font-black text-xl md:text-2xl flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider whitespace-nowrap drop-shadow-sm">
                  <ShoppingBag className="h-5 w-5 text-primary" /> Orders
@@ -237,12 +471,27 @@ export default function AdminDashboard() {
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
-              <PrintButton />
+              <Select value={orderDateFilter} onValueChange={setOrderDateFilter}>
+                <SelectTrigger className="w-[120px] rounded-xl h-8 text-xs bg-card"><SelectValue placeholder="Date Range" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="yesterday">Yesterday</SelectItem>
+                  <SelectItem value="week">Last 7 Days</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                  {allOrderMonths.map(m => {
+                     const date = new Date(`${m}-01`);
+                     const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                     return <SelectItem key={m} value={m}>{label}</SelectItem>;
+                  })}
+                </SelectContent>
+              </Select>
+              <PrintButton onClick={() => setPreviewMode("orders")} />
               <ExportButton data={ordersExportData} filename="orders" />
             </div>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 print:hidden">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 print:hidden">
             {filteredOrders.length === 0 && <p className="text-muted-foreground text-sm col-span-full ml-2">No orders matched search criteria.</p>}
             {filteredOrders.map(order => {
               // Extract the base color for the top border
@@ -250,14 +499,21 @@ export default function AdminDashboard() {
                                 order.status === 'confirmed' ? 'bg-blue-500' :
                                 order.status === 'cancelled' ? 'bg-red-500' :
                                 order.status === 'completed' ? 'bg-emerald-500' : 'bg-primary';
+              const userDetail = users.find(u => u.id === order.userId);
+              
               return (
               <Card key={order.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-border/80 hover:border-primary/30 rounded-3xl bg-card flex flex-col relative shadow-sm">
                 <div className={`absolute top-0 left-0 w-full h-1.5 ${colorBase}`}></div>
                 
-                <CardHeader className="p-4 bg-muted/20 border-b flex flex-row items-center justify-between space-y-0 mt-1">
-                  <div className="flex flex-col gap-1.5">
-                    <CardTitle className="text-base font-extrabold truncate max-w-[160px] leading-none">{order.userName}</CardTitle>
-                    <div className="flex items-center gap-1.5">
+                <CardHeader className="p-3 bg-muted/20 border-b flex flex-row items-start justify-between space-y-0 mt-1">
+                  <div className="flex flex-col gap-1.5 min-w-0 pr-2">
+                    <CardTitle className="text-base font-extrabold whitespace-normal break-words leading-tight">{order.userName}</CardTitle>
+                    {userDetail && (
+                       <p className="text-[10px] text-muted-foreground font-semibold uppercase leading-none mt-0.5 line-clamp-1">
+                         {userDetail.department} • {userDetail.designation}
+                       </p>
+                    )}
+                    <div className="flex items-center gap-1.5 mt-1">
                       <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] px-2 py-0.5 shadow-none uppercase font-bold leading-none">
                          {order.dayName.slice(0, 3)}
                       </Badge>
@@ -266,12 +522,12 @@ export default function AdminDashboard() {
                       </span>
                     </div>
                   </div>
-                  <Badge variant="outline" className={`text-xs px-2.5 py-1 whitespace-nowrap shadow-sm capitalize border-2 font-bold ${statusColors[order.status]}`}>{order.status}</Badge>
+                  <Badge variant="outline" className={`text-xs px-2.5 py-1 whitespace-nowrap shadow-sm capitalize border-2 font-bold shrink-0 mt-0.5 ${statusColors[order.status]}`}>{order.status}</Badge>
                 </CardHeader>
-                <CardContent className="p-4 flex-1 flex flex-col">
+                <CardContent className="p-3 flex-1 flex flex-col">
                   <div className="text-xs font-semibold mb-4 space-y-2 flex-1 mt-1">
                     {order.items.map((i, k) => (
-                      <div key={k} className="flex justify-between items-center bg-background border border-border/50 p-2.5 rounded-xl shadow-sm">
+                      <div key={k} className="flex justify-between items-center bg-background border border-border/50 p-2 rounded-xl shadow-sm">
                         <span className="text-foreground truncate mr-2 font-medium">{i.menuItem.name}</span>
                         <div className="flex items-center gap-2">
                           <span className="font-bold bg-muted px-2 py-1 rounded-md text-xs border border-border/50">x{i.quantity}</span>
@@ -281,8 +537,11 @@ export default function AdminDashboard() {
                     ))}
                   </div>
                   <div className="flex items-center justify-between pt-4 border-t mt-auto">
-                    <div className="bg-primary/10 px-3.5 py-2 rounded-xl border border-primary/20 shadow-sm">
-                       <span className="font-black text-sm text-primary tracking-tight">৳{order.total}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 bg-primary/10 px-3.5 py-2 rounded-xl border border-primary/20 shadow-sm hover:bg-primary/20 transition-colors">
+                            <span className="font-black text-sm text-primary tracking-tight">৳{order.total}</span>
+                            
+                         </div>
                     </div>
                     <div className="flex gap-2">
                       {order.status === "pending" && (
@@ -298,45 +557,32 @@ export default function AdminDashboard() {
                   </div>
                 </CardContent>
               </Card>
-            )})}
-          </div>
-
-          <div className="hidden print:block text-black">
-            <div className="mb-6 flex flex-col items-center border-b-2 border-black pb-4">
-              <h2 className="text-3xl font-black uppercase tracking-widest text-black">BAUST TEA BAR</h2>
-              <p className="text-lg font-bold text-gray-600 mt-1">Daily Orders Report</p>
-              <div className="flex w-full justify-between mt-4 text-xs font-bold text-gray-500">
-                <span>Total Found: {filteredOrders.length}</span>
-                <span>Generated: {new Date().toLocaleDateString()}</span>
-              </div>
+              );
+            })}
             </div>
-            <table className="w-full text-sm border-collapse text-black">
-              <thead>
-                <tr className="border-b-2 border-black bg-gray-100 !print:bg-gray-100">
-                  <th className="p-3 text-left font-extrabold uppercase text-xs uppercase tracking-wider">User</th>
-                  <th className="p-3 text-left font-extrabold uppercase text-xs uppercase tracking-wider">Date</th>
-                  <th className="p-3 text-left font-extrabold uppercase text-xs uppercase tracking-wider">Items</th>
-                  <th className="p-3 text-left font-extrabold uppercase text-xs uppercase tracking-wider">Total</th>
-                  <th className="p-3 text-left font-extrabold uppercase text-xs uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.map(order => (
-                  <tr key={order.id} className="border-b border-gray-300 break-inside-avoid">
-                    <td className="p-3 font-bold">{order.userName}</td>
-                    <td className="p-3 text-gray-700">{getAccurateOrderDate(order.date, order.dayName).toLocaleDateString()}</td>
-                    <td className="p-3">{order.items.map(i => `${i.menuItem.name} ×${i.quantity}`).join(', ')}</td>
-                    <td className="p-3 font-black text-gray-900 border-l border-gray-200">৳{order.total}</td>
-                    <td className="p-3 capitalize font-bold text-gray-600 border-l border-gray-200">{order.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          </div>
+          <div className={`${previewMode === "orders" ? "fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm p-4 sm:p-8 overflow-y-auto animate-in fade-in zoom-in-95 print:static print:bg-transparent print:p-0 print:block print:overflow-visible flex flex-col items-center" : "hidden print:block"}`}>
+             {previewMode === "orders" && (
+                <div className="w-full max-w-5xl bg-card text-card-foreground p-4 sm:p-6 rounded-3xl shadow-xl border mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4 print:hidden shrink-0 mt-8 sm:mt-0">
+                  <div>
+                    <h3 className="text-xl font-bold font-heading">Editable Print Preview</h3>
+                    <p className="text-sm text-muted-foreground">Click any text or number below to override it before making the final print.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setPreviewMode(null)} className="h-10 px-6 hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-all">Discard</Button>
+                    <Button onClick={() => window.print()} className="h-10 px-6 shadow-md"><Printer className="h-4 w-4 mr-2" /> Print Target</Button>
+                  </div>
+                </div>
+             )}
+             <div className={`bg-white text-black w-full max-w-5xl ${previewMode === "orders" ? "p-8 sm:p-12 mb-8 rounded-3xl shadow-2xl border relative print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none" : ""}`}>
+               {renderPrintOrders()}
+             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="menu" className="space-y-4 animate-in">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
+          <div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
               <h3 className="font-heading font-black text-xl md:text-2xl flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider whitespace-nowrap drop-shadow-sm">Menu Items</h3>
               <div className="w-full sm:w-auto"><SearchBar val={menuQuery} setVal={setMenuQuery} placeholder="Search item..." /></div>
@@ -351,7 +597,7 @@ export default function AdminDashboard() {
                   <SelectItem value="meal">Meal</SelectItem>
                 </SelectContent>
               </Select>
-              <PrintButton />
+              <PrintButton onClick={() => setPreviewMode("menu")} />
               <Button onClick={openAddMenu} size="sm" className="rounded-full shadow-sm bg-gradient-to-r from-emerald-500 to-teal-500 border-none h-8 text-xs">
                 <Plus className="h-3.5 w-3.5 mr-1" /> Add
               </Button>
@@ -384,42 +630,30 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             ))}
-          </div>
-
-          <div className="hidden print:block text-black">
-            <div className="mb-6 flex flex-col items-center border-b-2 border-black pb-4">
-              <h2 className="text-3xl font-black uppercase tracking-widest text-black">BAUST TEA BAR</h2>
-              <p className="text-lg font-bold text-gray-600 mt-1">Menu Catalog</p>
-              <div className="flex w-full justify-between mt-4 text-xs font-bold text-gray-500">
-                <span>Total Items: {filteredMenu.length}</span>
-                <span>Generated: {new Date().toLocaleDateString()}</span>
-              </div>
             </div>
-            <table className="w-full text-sm border-collapse text-black">
-              <thead>
-                <tr className="border-b-2 border-black bg-gray-100 !print:bg-gray-100">
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Item Name</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Category</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Price</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredMenu.map(item => (
-                  <tr key={item.id} className="border-b border-gray-300 break-inside-avoid">
-                    <td className="p-3 font-bold">{item.name}</td>
-                    <td className="p-3 capitalize text-gray-700">{item.category}</td>
-                    <td className="p-3 font-black text-gray-900 border-l border-gray-200">৳{item.price}</td>
-                    <td className="p-3 text-xs text-gray-600 border-l border-gray-200">{item.description}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          </div>
+          <div className={`${previewMode === "menu" ? "fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm p-4 sm:p-8 overflow-y-auto animate-in fade-in zoom-in-95 print:static print:bg-transparent print:p-0 print:block print:overflow-visible flex flex-col items-center" : "hidden print:block"}`}>
+             {previewMode === "menu" && (
+                <div className="w-full max-w-5xl bg-card text-card-foreground p-4 sm:p-6 rounded-3xl shadow-xl border mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4 print:hidden shrink-0 mt-8 sm:mt-0">
+                  <div>
+                    <h3 className="text-xl font-bold font-heading">Editable Print Preview</h3>
+                    <p className="text-sm text-muted-foreground">Click any text or number below to override it before making the final print.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setPreviewMode(null)} className="h-10 px-6 hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-all">Discard</Button>
+                    <Button onClick={() => window.print()} className="h-10 px-6 shadow-md"><Printer className="h-4 w-4 mr-2" /> Print Target</Button>
+                  </div>
+                </div>
+             )}
+             <div className={`bg-white text-black w-full max-w-5xl ${previewMode === "menu" ? "p-8 sm:p-12 mb-8 rounded-3xl shadow-2xl border relative print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none" : ""}`}>
+               {renderPrintMenu()}
+             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-4 animate-in">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
+          <div>
+             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
              <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
                <h3 className="font-heading font-black text-xl md:text-2xl flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider whitespace-nowrap drop-shadow-sm">Billings</h3>
                <div className="w-full sm:w-auto"><SearchBar val={billQuery} setVal={setBillQuery} placeholder="Search user..." /></div>
@@ -441,7 +675,7 @@ export default function AdminDashboard() {
                    {allBillingMonths.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
                  </SelectContent>
                </Select>
-               <PrintButton />
+               <PrintButton onClick={() => setPreviewMode("billing")} />
                <ExportButton data={billsExportData} filename="billing-ledger" />
              </div>
           </div>
@@ -453,59 +687,48 @@ export default function AdminDashboard() {
                 <CardContent className="p-0 flex">
                   <div className={`w-2 ${bill.status === 'paid' ? 'bg-emerald-500' : bill.status === 'partial' ? 'bg-amber-400' : 'bg-rose-500'}`}></div>
                   <div className="p-4 flex-1">
-                    <div className="flex items-center justify-between mb-2 border-b pb-2">
-                       <p className="font-bold text-sm truncate">{bill.userName}</p>
-                       <Badge variant="outline" className={`text-[10px] capitalize ${statusColors[bill.status]}`}>{bill.status}</Badge>
+                    <div className="flex items-center justify-between mb-2 border-b pb-2 gap-2">
+                       <p className="font-bold text-sm line-clamp-2 break-words">{bill.userName}</p>
+                       <Badge variant="outline" className={`text-[10px] capitalize shrink-0 ${statusColors[bill.status]}`}>{bill.status}</Badge>
                     </div>
                     <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">{bill.month}</span><span>{bill.orders} orders</span></div>
-                    <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Owed</span><span className="font-bold">৳{bill.totalAmount}</span></div>
-                    <div className="flex justify-between text-xs mb-3"><span className="text-muted-foreground">Paid</span><span className="font-bold text-success">৳{bill.paidAmount}</span></div>
+                    <div className="flex justify-between items-center text-xs mb-1 group/editbill">
+                       <span className="text-muted-foreground">Owed</span>
+                       <div className="flex items-center gap-1">
+                          <span className="font-bold">৳{bill.totalAmount}</span>
+                       </div>
+                    </div>
+                    <div className="flex justify-between text-xs mb-3"><span className="text-muted-foreground">Paid</span><span className="font-bold text-emerald-600 dark:text-emerald-400">৳{bill.paidAmount}</span></div>
                     
                     {bill.status !== "paid" && <Button size="sm" className="w-full h-7 text-xs rounded-lg" onClick={() => markBillPaid(bill.id)}>Settle <ChevronRight className="h-3 w-3 ml-1" /></Button>}
                   </div>
                 </CardContent>
               </Card>
             ))}
-          </div>
-
-          <div className="hidden print:block text-black">
-            <div className="mb-6 flex flex-col items-center border-b-2 border-black pb-4">
-              <h2 className="text-3xl font-black uppercase tracking-widest text-black">BAUST TEA BAR</h2>
-              <p className="text-lg font-bold text-gray-600 mt-1">Billing & Ledger Report</p>
-              <div className="flex w-full justify-between mt-4 text-xs font-bold text-gray-500">
-                <span>Total Bills: {filteredBills.length}</span>
-                <span>Generated: {new Date().toLocaleDateString()}</span>
-              </div>
             </div>
-            <table className="w-full text-sm border-collapse text-black">
-              <thead>
-                <tr className="border-b-2 border-black bg-gray-100 !print:bg-gray-100">
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">User Name</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Month</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Orders</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Owed</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Paid</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBills.map(bill => (
-                  <tr key={bill.id} className="border-b border-gray-300 break-inside-avoid">
-                    <td className="p-3 font-bold">{bill.userName}</td>
-                    <td className="p-3 text-gray-700">{bill.month}</td>
-                    <td className="p-3 text-gray-700">{bill.orders}</td>
-                    <td className="p-3 font-black text-gray-900 border-l border-gray-200">৳{bill.totalAmount}</td>
-                    <td className="p-3 font-black text-dark-emerald-600 border-l border-gray-200">৳{bill.paidAmount}</td>
-                    <td className="p-3 capitalize font-bold text-gray-600 border-l border-gray-200">{bill.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          </div>
+          <div className={`${previewMode === "billing" ? "fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm p-4 sm:p-8 overflow-y-auto animate-in fade-in zoom-in-95 print:static print:bg-transparent print:p-0 print:block print:overflow-visible flex flex-col items-center" : "hidden print:block"}`}>
+             {previewMode === "billing" && (
+                <div className="w-full max-w-5xl bg-card text-card-foreground p-4 sm:p-6 rounded-3xl shadow-xl border mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4 print:hidden shrink-0 mt-8 sm:mt-0">
+                  <div>
+                    <h3 className="text-xl font-bold font-heading">Editable Print Preview</h3>
+                    <p className="text-sm text-muted-foreground">Click any text or number below to override it before making the final print.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setPreviewMode(null)} className="h-10 px-6 hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-all">Discard</Button>
+                    <Button onClick={() => window.print()} className="h-10 px-6 shadow-md"><Printer className="h-4 w-4 mr-2" /> Print Target</Button>
+                  </div>
+                </div>
+             )}
+             <div className={`bg-white text-black w-full max-w-5xl ${previewMode === "billing" ? "p-8 sm:p-12 mb-8 rounded-3xl shadow-2xl border relative print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none" : ""}`}>
+               {renderPrintBilling()}
+             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="users" className="space-y-4 animate-in">
-           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
+           <div>
+             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/20 border shadow-sm print:hidden">
              <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
                <h3 className="font-heading font-black text-xl md:text-2xl flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent uppercase tracking-wider whitespace-nowrap drop-shadow-sm">Manage Users</h3>
                <div className="w-full sm:w-auto"><SearchBar val={userQuery} setVal={setUserQuery} placeholder="Search name/email..." /></div>
@@ -521,11 +744,11 @@ export default function AdminDashboard() {
                  </SelectContent>
                </Select>
                <Badge variant="secondary" className="px-3 py-1 flex items-center justify-center text-xs h-8 rounded-lg">{filteredUsers.length} Found</Badge>
-               <PrintButton />
+               <PrintButton onClick={() => setPreviewMode("users")} />
              </div>
            </div>
           
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 print:hidden">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 print:hidden">
             {filteredUsers.map(u => {
               const isBlocked = u.blocked && u.blocked !== "none";
               const colorBase = isBlocked ? "bg-red-500" : "bg-blue-500";
@@ -534,37 +757,37 @@ export default function AdminDashboard() {
               <Card key={u.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-border/80 hover:border-primary/30 rounded-3xl bg-card flex flex-col relative shadow-sm">
                 <div className={`absolute top-0 left-0 w-full h-1.5 ${colorBase}`}></div>
                 
-                <CardHeader className="p-4 bg-muted/20 border-b flex flex-row items-center justify-between space-y-0 mt-1">
-                  <div className="flex flex-col gap-1.5">
-                    <CardTitle className="text-base font-extrabold truncate max-w-[160px] leading-none" title={u.name}>{u.name}</CardTitle>
-                    <div className="flex items-center gap-1.5">
+                <CardHeader className="p-3 bg-muted/20 border-b flex flex-row items-center justify-between space-y-0 mt-1">
+                  <div className="flex flex-col gap-1.5 min-w-0 pr-2">
+                    <CardTitle className="text-base font-extrabold line-clamp-2 break-words leading-tight" title={u.name}>{u.name}</CardTitle>
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] px-2 py-0.5 shadow-none uppercase font-bold leading-none">
                          {u.role === "admin" ? "Admin" : "Member"}
                       </Badge>
-                      <span className="text-[10px] text-muted-foreground font-semibold leading-none truncate max-w-[140px]" title={u.email}>
+                      <span className="text-[11px] text-muted-foreground font-semibold leading-tight break-all" title={u.email}>
                          {u.email}
                       </span>
                     </div>
                   </div>
-                  <Badge variant="outline" className={`text-xs px-2.5 py-1 whitespace-nowrap shadow-sm capitalize border-2 font-bold ${isBlocked ? 'bg-red-100 text-red-700 border-red-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
+                  <Badge variant="outline" className={`text-xs px-2.5 py-1 whitespace-nowrap shadow-sm capitalize border-2 font-bold shrink-0 self-start mt-1 ${isBlocked ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400' : 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400'}`}>
                     {isBlocked ? "Restricted" : "Active"}
                   </Badge>
                 </CardHeader>
                 
-                <CardContent className="p-4 flex-1 flex flex-col">
+                <CardContent className="p-3 flex-1 flex flex-col">
                   <div className="text-xs font-semibold mb-4 space-y-2 flex-1 mt-1">
                     
-                    <div className="flex justify-between items-center bg-background border border-border/50 p-2.5 rounded-xl shadow-sm">
+                    <div className="flex justify-between items-center bg-background border border-border/50 p-2 rounded-xl shadow-sm">
                       <span className="text-muted-foreground mr-2 font-medium">Designation</span>
                       <span className="font-bold bg-muted px-2 py-1 rounded-md text-xs border border-border/50 text-foreground truncate max-w-[150px]">{u.designation}</span>
                     </div>
                     
-                    <div className="flex justify-between items-center bg-background border border-border/50 p-2.5 rounded-xl shadow-sm">
+                    <div className="flex justify-between items-center bg-background border border-border/50 p-2 rounded-xl shadow-sm">
                       <span className="text-muted-foreground mr-2 font-medium">Department</span>
                       <span className="font-bold bg-muted px-2 py-1 rounded-md text-xs border border-border/50 text-foreground truncate max-w-[150px]" title={u.department}>{u.department}</span>
                     </div>
                     
-                    <div className="flex justify-between items-center bg-background border border-border/50 p-2.5 rounded-xl shadow-sm">
+                    <div className="flex justify-between items-center bg-background border border-border/50 p-2 rounded-xl shadow-sm">
                       <span className="text-muted-foreground mr-2 font-medium">Contact</span>
                       <span className="font-bold bg-muted px-2 py-1 rounded-md text-xs border border-border/50 text-primary bg-primary/5">{u.phone}</span>
                     </div>
@@ -584,7 +807,7 @@ export default function AdminDashboard() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
-                      <Button variant="outline" className="w-full h-9 text-xs font-bold rounded-xl text-emerald-600 border-emerald-600/30 hover:bg-emerald-600 hover:text-white shadow-sm" onClick={() => blockUser(u.id, "none")}><ShieldCheck className="w-3.5 h-3.5 mr-1" /> Restore Access</Button>
+                      <Button variant="outline" className="w-full h-9 text-xs font-bold rounded-xl text-emerald-600 border-emerald-600/30 hover:bg-emerald-600 hover:text-white shadow-sm dark:text-emerald-400 dark:hover:text-white" onClick={() => blockUser(u.id, "none")}><ShieldCheck className="w-3.5 h-3.5 mr-1" /> Restore Access</Button>
                     )}
                     </div>
                     <Button variant="outline" size="icon" className="h-9 w-10 text-red-600 rounded-xl border border-red-600/30 hover:bg-red-600 hover:text-white shadow-sm shrink-0" onClick={() => deleteUser(u.id)}><Trash2 className="h-4 w-4" /></Button>
@@ -593,43 +816,24 @@ export default function AdminDashboard() {
               </Card>
               )
             })}
-          </div>
-
-          <div className="hidden print:block text-black">
-            <div className="mb-6 flex flex-col items-center border-b-2 border-black pb-4">
-              <h2 className="text-3xl font-black uppercase tracking-widest text-black">BAUST TEA BAR</h2>
-              <p className="text-lg font-bold text-gray-600 mt-1">Users Directory</p>
-              <div className="flex w-full justify-between mt-4 text-xs font-bold text-gray-500">
-                <span>Total Users: {filteredUsers.length}</span>
-                <span>Generated: {new Date().toLocaleDateString()}</span>
-              </div>
             </div>
-            <table className="w-full text-sm border-collapse text-black">
-              <thead>
-                <tr className="border-b-2 border-black bg-gray-100 !print:bg-gray-100">
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Name</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Email</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Dept</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Designation</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Phone</th>
-                  <th className="p-3 text-left font-extrabold text-xs uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map(u => (
-                  <tr key={u.id} className="border-b border-gray-300 break-inside-avoid">
-                    <td className="p-3 font-bold">{u.name}</td>
-                    <td className="p-3 text-gray-700">{u.email}</td>
-                    <td className="p-3 text-gray-700">{u.department}</td>
-                    <td className="p-3 text-gray-600">{u.designation}</td>
-                    <td className="p-3 font-medium border-l border-gray-200">{u.phone}</td>
-                    <td className="p-3 capitalize font-bold text-gray-600 border-l border-gray-200">
-                      {u.role === 'admin' ? 'Admin' : (u.blocked && u.blocked !== 'none' ? 'Restricted' : 'Member')}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          </div>
+          <div className={`${previewMode === "users" ? "fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm p-4 sm:p-8 overflow-y-auto animate-in fade-in zoom-in-95 print:static print:bg-transparent print:p-0 print:block print:overflow-visible flex flex-col items-center" : "hidden print:block"}`}>
+             {previewMode === "users" && (
+                <div className="w-full max-w-5xl bg-card text-card-foreground p-4 sm:p-6 rounded-3xl shadow-xl border mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4 print:hidden shrink-0 mt-8 sm:mt-0">
+                  <div>
+                    <h3 className="text-xl font-bold font-heading">Editable Print Preview</h3>
+                    <p className="text-sm text-muted-foreground">Click any text or number below to override it before making the final print.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setPreviewMode(null)} className="h-10 px-6 hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-all">Discard</Button>
+                    <Button onClick={() => window.print()} className="h-10 px-6 shadow-md"><Printer className="h-4 w-4 mr-2" /> Print Target</Button>
+                  </div>
+                </div>
+             )}
+             <div className={`bg-white text-black w-full max-w-5xl ${previewMode === "users" ? "p-8 sm:p-12 mb-8 rounded-3xl shadow-2xl border relative print:border-none print:shadow-none print:p-0 print:m-0 print:rounded-none" : ""}`}>
+               {renderPrintUsers()}
+             </div>
           </div>
         </TabsContent>
       </Tabs>

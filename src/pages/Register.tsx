@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Coffee, UserPlus } from "lucide-react";
 import logo from "@/assets/logo-new.jpg";
 
-const DEPARTMENTS = ["CSE", "EEE", "ICT", "ME", "IPE", "CE", "DBA", "AIS", "English", "Department of Arts and Sciences (Bangla, English, Physics, Math, Chemistry, Sociology)"];
+const DEPARTMENTS = ["CSE", "EEE", "ICT", "ME", "IPE", "CE", "DBA", "AIS", "English", "Department of Arts and Sciences (Bangla, English, Physics, Math, Chemistry, Sociology)", "ICT Wing & Archive", "Vice Chancellor's Office", "Office of the Treasurer", "Office of the Registrar", "Controller of Examination", "Admission Office", "Library Office"];
 
 export default function Register() {
   const { register } = useAuth();

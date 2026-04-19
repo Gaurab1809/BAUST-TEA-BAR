@@ -205,7 +205,7 @@ export default function Index() {
 
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
-          <h2 className="font-heading text-xl font-bold flex items-center gap-2">
+          <h2 className="font-heading text-2xl md:text-3xl font-extrabold flex items-center gap-2">
             <span className="text-primary">{selectedDay.dayName}</span> Menu
           </h2>
           <div className="relative max-w-xs w-full">

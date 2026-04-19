@@ -48,8 +48,8 @@ export default function Billing() {
       </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-3">
-        <h2 className="font-heading text-lg font-bold flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" /> Payment History
+        <h2 className="font-heading text-xl sm:text-2xl font-extrabold flex items-center gap-2">
+          <TrendingUp className="h-6 w-6 text-primary" /> Payment History
         </h2>
         <Select value={selectedMonth} onValueChange={setSelectedMonth}>
           <SelectTrigger className="w-[140px] h-9 text-xs rounded-xl bg-card"><SelectValue /></SelectTrigger>
