@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
 import { MenuItem, Order, OrderItem, MonthlyBill, Notification, DayOfWeek, User, MENU_ITEMS as INITIAL_MENU } from "./mock-data";
-import { db } from "./firebase";
+import { db, auth } from "./firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import { collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, updateDoc, getDocs, getDoc, increment, writeBatch, query, orderBy, limit } from "firebase/firestore";
 
 interface AppState {
@@ -50,43 +51,57 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   // Setup Firestore Real-time Listeners
   useEffect(() => {
-    const unsubMenu = onSnapshot(collection(db, "menuItems"), (snapshot) => {
-      const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as MenuItem));
-      // Optionally seed default items if empty initially
-      if (items.length === 0) {
-        const seedMenu = async () => {
-          const batch = writeBatch(db);
-          INITIAL_MENU.forEach(item => {
-            const docRef = doc(collection(db, "menuItems"));
-            batch.set(docRef, { ...item, id: docRef.id });
-          });
-          await batch.commit();
-        };
-        seedMenu();
+    let unsubMenu = () => {};
+    let unsubOrders = () => {};
+    let unsubBills = () => {};
+    let unsubNotifs = () => {};
+    let unsubUsers = () => {};
+
+    const authUnsub = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        unsubMenu = onSnapshot(collection(db, "menuItems"), (snapshot) => {
+          const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as MenuItem));
+          if (items.length === 0) {
+            const seedMenu = async () => {
+              const batch = writeBatch(db);
+              INITIAL_MENU.forEach(item => {
+                const docRef = doc(collection(db, "menuItems"));
+                batch.set(docRef, { ...item, id: docRef.id });
+              });
+              await batch.commit();
+            };
+            seedMenu();
+          } else {
+            setMenuItems(items);
+          }
+        });
+
+        unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(500)), (snapshot) => {
+          const items = snapshot.docs.map(d => ({ ...d.data(), id: d.id } as Order));
+          setOrders(items);
+        });
+
+        unsubBills = onSnapshot(collection(db, "bills"), (snapshot) => {
+          setBills(snapshot.docs.map(d => ({ ...d.data(), id: d.id } as MonthlyBill)));
+        });
+
+        unsubNotifs = onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(100)), (snapshot) => {
+          const items = snapshot.docs.map(d => ({ ...d.data(), id: d.id } as Notification));
+          setNotifications(items);
+        });
+
+        unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
+          setUsers(snapshot.docs.map(d => ({ ...d.data(), id: d.id } as User)));
+        });
       } else {
-        setMenuItems(items);
+        // Clear data and listeners when logged out
+        setMenuItems([]); setOrders([]); setBills([]); setNotifications([]); setUsers([]);
+        unsubMenu(); unsubOrders(); unsubBills(); unsubNotifs(); unsubUsers();
       }
     });
 
-    const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(500)), (snapshot) => {
-      const items = snapshot.docs.map(d => ({ ...d.data(), id: d.id } as Order));
-      setOrders(items);
-    });
-
-    const unsubBills = onSnapshot(collection(db, "bills"), (snapshot) => {
-      setBills(snapshot.docs.map(d => ({ ...d.data(), id: d.id } as MonthlyBill)));
-    });
-
-    const unsubNotifs = onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(100)), (snapshot) => {
-      const items = snapshot.docs.map(d => ({ ...d.data(), id: d.id } as Notification));
-      setNotifications(items);
-    });
-
-    const unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
-      setUsers(snapshot.docs.map(d => ({ ...d.data(), id: d.id } as User)));
-    });
-
     return () => {
+      authUnsub();
       unsubMenu(); unsubOrders(); unsubBills(); unsubNotifs(); unsubUsers();
     };
   }, []);
