@@ -29,7 +29,7 @@ function getNextWorkingDays(): { date: Date; dayName: DayOfWeek; disabled: boole
 }
 
 export default function Index() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isTopManagement } = useAuth();
   const { menuItems, placeOrder, users } = useAppState();
   const navigate = useNavigate();
 
@@ -97,9 +97,9 @@ export default function Index() {
         </div>
 
         <div className="flex items-center gap-3">
-          {isAdmin && (
+          {(isAdmin || isTopManagement) && (
             <Button onClick={() => navigate("/admin")} className="rounded-full shadow-md bg-gradient-to-r from-indigo-600 to-purple-600 border-none group px-5 h-10 hidden sm:flex text-sm">
-              Admin Workspace <ArrowRight className="h-4 w-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
+              {isAdmin ? "Admin Workspace" : "Management Workspace"} <ArrowRight className="h-4 w-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
             </Button>
           )}
 
@@ -164,10 +164,10 @@ export default function Index() {
         </div>
       </div>
 
-      {isAdmin && (
+      {(isAdmin || isTopManagement) && (
         <div className="mb-6 sm:hidden">
             <Button onClick={() => navigate("/admin")} className="rounded-full shadow-md bg-gradient-to-r from-indigo-600 to-purple-600 border-none group px-5 h-10 w-full text-sm">
-              Admin Workspace <ArrowRight className="h-4 w-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
+              {isAdmin ? "Admin Workspace" : "Management Workspace"} <ArrowRight className="h-4 w-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
             </Button>
         </div>
       )}
