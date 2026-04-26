@@ -100,7 +100,7 @@ export default function Register() {
         </form>
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
-          Already have an account? <Link to="/login" className="text-primary font-semibold hover:underline">Sign in</Link>
+          Already have an account? <Link to="/login?type=staff" className="text-primary font-semibold hover:underline">Sign in</Link>
         </div>
       </div>
     </div>

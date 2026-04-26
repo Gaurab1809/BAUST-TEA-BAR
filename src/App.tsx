@@ -18,13 +18,14 @@ import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Landing from "./pages/Landing";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
-  const { isAuthenticated, isAdmin } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (adminOnly && !isAdmin) return <Navigate to="/" replace />;
+  const { isAuthenticated, isAdmin, isTopManagement } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/welcome" replace />;
+  if (adminOnly && !isAdmin && !isTopManagement) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -33,6 +34,7 @@ function AppRoutes() {
     <>
       <Navbar />
       <Routes>
+        <Route path="/welcome" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

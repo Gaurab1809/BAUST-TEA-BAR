@@ -24,6 +24,7 @@ interface RegisterData {
 interface AuthContextType {
   user: User | null;
   isAdmin: boolean;
+  isTopManagement: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (data: RegisterData) => Promise<{ success: boolean; message?: string }>;
@@ -126,8 +127,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await setDoc(doc(db, "users", uid), userData);
       
       return { success: true, message: "Registration successful" };
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      // Workaround for admin-deleted users who try to register again
+      if (e.code === 'auth/email-already-in-use') {
+        try {
+          const cred = await signInWithEmailAndPassword(auth, data.email, data.password);
+          const docSnap = await getDoc(doc(db, "users", cred.user.uid));
+          if (!docSnap.exists()) {
+             const userData: User = {
+               id: cred.user.uid,
+               name: data.name,
+               email: data.email,
+               designation: data.designation,
+               department: data.department,
+               phone: data.phone,
+               role: "user",
+             };
+             await setDoc(doc(db, "users", cred.user.uid), userData);
+             return { success: true, message: "Registration successful" };
+          }
+        } catch (signInErr) {
+          // Fallback to normal error
+        }
+      }
       const msg = e instanceof Error ? e.message : "Network error occurred.";
       return { success: false, message: msg };
     }
@@ -188,6 +211,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{
       user,
       isAdmin: user?.role === "admin",
+      isTopManagement: user?.role === "topmanagement",
       login,
       logout,
       register,

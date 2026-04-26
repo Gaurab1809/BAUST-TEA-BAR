@@ -9,7 +9,7 @@ import { useAppState } from "@/lib/app-state";
 import logo from "@/assets/logo-new.jpg";
 
 export function Navbar() {
-  const { user, isAdmin, logout, isAuthenticated } = useAuth();
+  const { user, isAdmin, isTopManagement, logout, isAuthenticated } = useAuth();
   const { notifications } = useAppState();
   const navigate = useNavigate();
   const location = useLocation();
@@ -36,7 +36,7 @@ export function Navbar() {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/welcome");
   };
 
   if (!isAuthenticated) return null;
@@ -45,7 +45,7 @@ export function Navbar() {
     { to: "/", label: "Home" },
     { to: "/my-orders", label: "My Orders" },
     { to: "/billing", label: "Billing" },
-    ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),
+    ...(isAdmin || isTopManagement ? [{ to: "/admin", label: isAdmin ? "Admin" : "Management" }] : []),
   ];
 
   const isActive = (path: string) => location.pathname === path;

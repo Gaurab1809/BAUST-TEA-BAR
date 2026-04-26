@@ -38,6 +38,10 @@ interface AppState {
   deleteUser: (userId: string) => void;
   updateUser: (userId: string, updates: Partial<User>) => void;
   blockUser: (userId: string, blockType: "none" | "ordering" | "full") => void;
+
+  // Manual History Deletion
+  deleteOrder: (orderId: string) => void;
+  deleteBill: (billId: string) => void;
 }
 
 const AppStateContext = createContext<AppState | null>(null);
@@ -274,10 +278,27 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setDoc(doc(db, "users", user.id), user);
   }, []);
 
-  const deleteUser = useCallback((userId: string) => {
-    // Note: This deletes the Firestore profile, but not their Auth account 
-    // unless done through an Admin SDK
-    deleteDoc(doc(db, "users", userId));
+  const deleteUser = useCallback(async (userId: string) => {
+    try {
+      const batch = writeBatch(db);
+      
+      // Delete orders
+      const ordersQ = query(collection(db, "orders"), where("userId", "==", userId));
+      const ordersSnap = await getDocs(ordersQ);
+      ordersSnap.forEach((doc) => batch.delete(doc.ref));
+
+      // Delete bills
+      const billsQ = query(collection(db, "bills"), where("userId", "==", userId));
+      const billsSnap = await getDocs(billsQ);
+      billsSnap.forEach((doc) => batch.delete(doc.ref));
+
+      // Delete user
+      batch.delete(doc(db, "users", userId));
+      
+      await batch.commit();
+    } catch (e) {
+      console.error("Error completely wiping user data:", e);
+    }
   }, []);
 
   const updateUser = useCallback((userId: string, updates: Partial<User>) => {
@@ -288,6 +309,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     updateDoc(doc(db, "users", userId), { blocked: blockType });
   }, []);
 
+  const deleteOrder = useCallback(async (orderId: string) => {
+    await deleteDoc(doc(db, "orders", orderId));
+  }, []);
+
+  const deleteBill = useCallback(async (billId: string) => {
+    await deleteDoc(doc(db, "bills", billId));
+  }, []);
+
   return (
     <AppStateContext.Provider value={{
       menuItems, addMenuItem, updateMenuItem, deleteMenuItem,
@@ -295,6 +324,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       bills, markBillPaid, markBillPartial, updateBillTotal,
       notifications, markNotificationRead, markAllNotificationsRead, addNotification,
       users, addUser, deleteUser, updateUser, blockUser,
+      deleteOrder, deleteBill,
     }}>
       {children}
     </AppStateContext.Provider>

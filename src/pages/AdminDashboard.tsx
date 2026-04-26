@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useAppState } from "@/lib/app-state";
+import { useAuth } from "@/lib/auth-context";
 import { MenuItem, WORKING_DAYS, DayOfWeek } from "@/lib/mock-data";
 
 import { getAccurateOrderDate } from "@/lib/utils";
@@ -65,7 +66,8 @@ const SearchBar = ({ val, setVal, placeholder }: { val: string, setVal: (s:strin
 );
 
 export default function AdminDashboard() {
-  const { orders, confirmOrder, rejectOrder, completeOrder, updateOrderTotal, menuItems, addMenuItem, updateMenuItem, deleteMenuItem, bills, markBillPaid, updateBillTotal, users, deleteUser, addNotification, blockUser } = useAppState();
+  const { orders, confirmOrder, rejectOrder, completeOrder, updateOrderTotal, menuItems, addMenuItem, updateMenuItem, deleteMenuItem, bills, markBillPaid, updateBillTotal, users, deleteUser, addNotification, blockUser, deleteOrder, deleteBill } = useAppState();
+  const { isTopManagement } = useAuth();
   
   // Search queries
   const [orderQuery, setOrderQuery] = useState("");
@@ -90,6 +92,9 @@ export default function AdminDashboard() {
   const [announcementOpen, setAnnouncementOpen] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const [billToDelete, setBillToDelete] = useState<string | null>(null);
 
   // Menu form state
   const [formName, setFormName] = useState("");
@@ -192,6 +197,11 @@ export default function AdminDashboard() {
     }
   };
   const handleDeleteMenu = (id: string) => { deleteMenuItem(id); toast.success("Deleted"); setDeleteConfirm(null); };
+
+  const handleDeleteUser = async (id: string) => { await deleteUser(id); toast.success("User and history completely deleted"); setUserToDelete(null); };
+  const handleDeleteOrder = async (id: string) => { await deleteOrder(id); toast.success("Order deleted"); setOrderToDelete(null); };
+  const handleDeleteBill = async (id: string) => { await deleteBill(id); toast.success("Bill deleted"); setBillToDelete(null); };
+
   const toggleDay = (day: DayOfWeek) => setFormDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
   const handleSendAnnouncement = () => {
     if (!announcementText.trim()) return toast.error("Enter message");
@@ -411,9 +421,11 @@ export default function AdminDashboard() {
           <h1 className="font-heading text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Admin Workspace</h1>
           <p className="text-muted-foreground mt-1 font-medium text-sm">Control center for operations.</p>
         </div>
-        <Button onClick={() => setAnnouncementOpen(true)} size="sm" className="rounded-full shadow-sm bg-gradient-to-r from-blue-600 to-indigo-600 border-none px-4 h-9">
-          <Send className="h-3.5 w-3.5 mr-2" /> Broadcast
-        </Button>
+        {!isTopManagement && (
+          <Button onClick={() => setAnnouncementOpen(true)} size="sm" className="rounded-full shadow-sm bg-gradient-to-r from-blue-600 to-indigo-600 border-none px-4 h-9">
+            <Send className="h-3.5 w-3.5 mr-2" /> Broadcast
+          </Button>
+        )}
       </div>
 
       {/* Stats Row */}
@@ -546,14 +558,17 @@ export default function AdminDashboard() {
                          </div>
                     </div>
                     <div className="flex gap-2">
-                      {order.status === "pending" && (
+                      {!isTopManagement && order.status === "pending" && (
                         <>
                           <Button size="icon" variant="outline" className="h-9 w-9 rounded-full text-emerald-600 hover:bg-emerald-600 hover:text-white border-emerald-600/30 shadow-sm transition-colors" onClick={() => confirmOrder(order.id)}><CheckCircle className="h-5 w-5" /></Button>
                           <Button size="icon" variant="outline" className="h-9 w-9 rounded-full text-rose-600 hover:bg-rose-600 hover:text-white border-rose-600/30 shadow-sm transition-colors" onClick={() => rejectOrder(order.id)}><XCircle className="h-5 w-5" /></Button>
                         </>
                       )}
-                      {order.status === "confirmed" && (
+                      {!isTopManagement && order.status === "confirmed" && (
                         <Button size="sm" className="h-9 font-bold px-5 text-sm rounded-full bg-primary/10 hover:bg-primary/20 text-primary shadow-sm border border-primary/20" onClick={() => completeOrder(order.id)}>Complete</Button>
+                      )}
+                      {!isTopManagement && (
+                        <Button size="icon" variant="outline" className="h-9 w-9 rounded-full text-red-600 hover:bg-red-600 hover:text-white border-red-600/30 shadow-sm transition-colors shrink-0" onClick={() => setOrderToDelete(order.id)} title="Delete Order"><Trash2 className="h-4 w-4" /></Button>
                       )}
                     </div>
                   </div>
@@ -602,9 +617,11 @@ export default function AdminDashboard() {
                 </SelectContent>
               </Select>
               <PrintButton onClick={() => setPreviewMode("menu")} />
-              <Button onClick={openAddMenu} size="sm" className="rounded-full shadow-sm bg-gradient-to-r from-emerald-500 to-teal-500 border-none h-8 text-xs">
-                <Plus className="h-3.5 w-3.5 mr-1" /> Add
-              </Button>
+              {!isTopManagement && (
+                <Button onClick={openAddMenu} size="sm" className="rounded-full shadow-sm bg-gradient-to-r from-emerald-500 to-teal-500 border-none h-8 text-xs">
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Add
+                </Button>
+              )}
             </div>
           </div>
           
@@ -627,10 +644,12 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <Button variant="outline" size="sm" className="h-7 text-xs rounded-lg" onClick={() => openEditMenu(item)}>Edit</Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs rounded-lg text-red-600 hover:bg-red-600 hover:text-white border-red-600/30" onClick={() => setDeleteConfirm(item.id)}>Del</Button>
-                  </div>
+                  {!isTopManagement && (
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <Button variant="outline" size="sm" className="h-7 text-xs rounded-lg" onClick={() => openEditMenu(item)}>Edit</Button>
+                      <Button variant="outline" size="sm" className="h-7 text-xs rounded-lg text-red-600 hover:bg-red-600 hover:text-white border-red-600/30" onClick={() => setDeleteConfirm(item.id)}>Del</Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -706,7 +725,12 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex justify-between text-xs mb-3"><span className="text-muted-foreground">Paid</span><span className="font-bold text-emerald-600 dark:text-emerald-400">৳{bill.paidAmount}</span></div>
                     
-                    {bill.status !== "paid" && <Button size="sm" className="w-full h-7 text-xs rounded-lg" onClick={() => markBillPaid(bill.id)}>Settle <ChevronRight className="h-3 w-3 ml-1" /></Button>}
+                    {!isTopManagement && (
+                      <div className="flex items-center gap-2 mt-2">
+                        {bill.status !== "paid" && <Button size="sm" className="flex-1 h-8 text-xs rounded-lg font-bold" onClick={() => markBillPaid(bill.id)}>Settle <ChevronRight className="h-3 w-3 ml-1" /></Button>}
+                        <Button size="icon" variant="outline" className="h-8 w-8 text-red-600 rounded-lg border border-red-600/30 hover:bg-red-600 hover:text-white shadow-sm shrink-0" onClick={() => setBillToDelete(bill.id)} title="Delete Bill"><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -802,24 +826,26 @@ export default function AdminDashboard() {
 
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t mt-auto gap-2">
-                    <div className="flex-1">
-                    {(!u.blocked || u.blocked === "none") ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button className="w-full h-9 text-xs rounded-xl font-bold bg-gradient-to-r from-[hsl(30,75%,55%)] to-[hsl(32,85%,50%)] hover:from-[hsl(32,90%,55%)] hover:to-[hsl(30,80%,60%)] text-[hsl(24,10%,8%)] shadow-md shadow-[hsl(30,75%,55%)]/30 hover:shadow-lg hover:shadow-[hsl(30,75%,55%)]/50 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98] border-none transition-all duration-300 ease-out" size="sm">Manage Rights</Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="center" className="rounded-xl border-border/50 shadow-xl w-[200px]">
-                          <DropdownMenuItem onClick={() => blockUser(u.id, "ordering")} className="rounded-lg cursor-pointer font-medium">Disable Ordering</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => blockUser(u.id, "full")} className="text-red-600 rounded-lg cursor-pointer font-bold mt-1">Full Ban</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : (
-                      <Button variant="outline" className="w-full h-9 text-xs font-bold rounded-xl text-emerald-600 border-emerald-600/30 hover:bg-emerald-600 hover:text-white shadow-sm dark:text-emerald-400 dark:hover:text-white" onClick={() => blockUser(u.id, "none")}><ShieldCheck className="w-3.5 h-3.5 mr-1" /> Restore Access</Button>
-                    )}
+                  {!isTopManagement && (
+                    <div className="flex items-center justify-between pt-4 border-t mt-auto gap-2">
+                      <div className="flex-1">
+                      {(!u.blocked || u.blocked === "none") ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button className="w-full h-9 text-xs rounded-xl font-bold bg-gradient-to-r from-[hsl(30,75%,55%)] to-[hsl(32,85%,50%)] hover:from-[hsl(32,90%,55%)] hover:to-[hsl(30,80%,60%)] text-[hsl(24,10%,8%)] shadow-md shadow-[hsl(30,75%,55%)]/30 hover:shadow-lg hover:shadow-[hsl(30,75%,55%)]/50 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98] border-none transition-all duration-300 ease-out" size="sm">Manage Rights</Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="center" className="rounded-xl border-border/50 shadow-xl w-[200px]">
+                            <DropdownMenuItem onClick={() => blockUser(u.id, "ordering")} className="rounded-lg cursor-pointer font-medium">Disable Ordering</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => blockUser(u.id, "full")} className="text-red-600 rounded-lg cursor-pointer font-bold mt-1">Full Ban</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <Button variant="outline" className="w-full h-9 text-xs font-bold rounded-xl text-emerald-600 border-emerald-600/30 hover:bg-emerald-600 hover:text-white shadow-sm dark:text-emerald-400 dark:hover:text-white" onClick={() => blockUser(u.id, "none")}><ShieldCheck className="w-3.5 h-3.5 mr-1" /> Restore Access</Button>
+                      )}
+                      </div>
+                      <Button variant="outline" size="icon" className="h-9 w-10 text-red-600 rounded-xl border border-red-600/30 hover:bg-red-600 hover:text-white shadow-sm shrink-0" onClick={() => setUserToDelete(u.id)} title="Delete User"><Trash2 className="h-4 w-4" /></Button>
                     </div>
-                    <Button variant="outline" size="icon" className="h-9 w-10 text-red-600 rounded-xl border border-red-600/30 hover:bg-red-600 hover:text-white shadow-sm shrink-0" onClick={() => deleteUser(u.id)}><Trash2 className="h-4 w-4" /></Button>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
               )
@@ -894,7 +920,10 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
       <Dialog open={announcementOpen} onOpenChange={setAnnouncementOpen}><DialogContent className="max-w-sm rounded-[1.5rem] p-5"><DialogHeader className="mb-2"><DialogTitle>Broadcast</DialogTitle></DialogHeader><Textarea value={announcementText} onChange={e => setAnnouncementText(e.target.value)} placeholder="Message..." rows={4} className="text-sm bg-muted/30 resize-none" /><DialogFooter className="mt-4"><Button onClick={handleSendAnnouncement} size="sm" className="w-full h-10 rounded-xl shadow-sm">Send</Button></DialogFooter></DialogContent></Dialog>
-      <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}><DialogContent className="max-w-xs rounded-2xl p-5 text-center"><DialogTitle className="text-base mb-3">Delete Item?</DialogTitle><div className="flex gap-2"><Button variant="outline" className="flex-1 h-9 rounded-xl" onClick={() => setDeleteConfirm(null)}>Cancel</Button><Button variant="destructive" className="flex-1 h-9 rounded-xl" onClick={() => deleteConfirm && handleDeleteMenu(deleteConfirm)}>Confirm</Button></div></DialogContent></Dialog>
+      <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}><DialogContent className="max-w-xs rounded-2xl p-5 text-center"><DialogTitle className="text-base mb-3">Delete Menu Item?</DialogTitle><div className="flex gap-2"><Button variant="outline" className="flex-1 h-9 rounded-xl" onClick={() => setDeleteConfirm(null)}>Cancel</Button><Button variant="destructive" className="flex-1 h-9 rounded-xl" onClick={() => deleteConfirm && handleDeleteMenu(deleteConfirm)}>Confirm</Button></div></DialogContent></Dialog>
+      <Dialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}><DialogContent className="max-w-md rounded-2xl p-6 text-center"><DialogHeader><DialogTitle className="text-xl mb-2 text-red-600">Delete User & All History?</DialogTitle><DialogDescription className="text-sm">This action is irreversible. The user's account, their orders, and their billing history will be completely wiped from the database. They will not be able to log in with this account again.</DialogDescription></DialogHeader><div className="flex gap-3 mt-4"><Button variant="outline" className="flex-1 h-10 rounded-xl font-bold" onClick={() => setUserToDelete(null)}>Cancel</Button><Button variant="destructive" className="flex-1 h-10 rounded-xl font-bold" onClick={() => userToDelete && handleDeleteUser(userToDelete)}>Yes, Delete User Data</Button></div></DialogContent></Dialog>
+      <Dialog open={!!orderToDelete} onOpenChange={() => setOrderToDelete(null)}><DialogContent className="max-w-xs rounded-2xl p-5 text-center"><DialogTitle className="text-base mb-3 text-red-600">Delete Order Permanently?</DialogTitle><div className="flex gap-2"><Button variant="outline" className="flex-1 h-9 rounded-xl font-bold" onClick={() => setOrderToDelete(null)}>Cancel</Button><Button variant="destructive" className="flex-1 h-9 rounded-xl font-bold" onClick={() => orderToDelete && handleDeleteOrder(orderToDelete)}>Delete</Button></div></DialogContent></Dialog>
+      <Dialog open={!!billToDelete} onOpenChange={() => setBillToDelete(null)}><DialogContent className="max-w-xs rounded-2xl p-5 text-center"><DialogTitle className="text-base mb-3 text-red-600">Delete Billing History?</DialogTitle><div className="flex gap-2"><Button variant="outline" className="flex-1 h-9 rounded-xl font-bold" onClick={() => setBillToDelete(null)}>Cancel</Button><Button variant="destructive" className="flex-1 h-9 rounded-xl font-bold" onClick={() => billToDelete && handleDeleteBill(billToDelete)}>Delete</Button></div></DialogContent></Dialog>
     </div>
   );
 }

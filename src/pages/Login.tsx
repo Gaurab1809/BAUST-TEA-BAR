@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, Coffee, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth-context";
@@ -15,6 +16,16 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const type = searchParams.get('type') || 'staff';
+
+  const portalNames: Record<string, string> = {
+    management: "Management Portal",
+    admin: "Admin Portal",
+    staff: "Teacher & Staff Login"
+  };
+  
+  const portalName = portalNames[type] || portalNames.staff;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +52,7 @@ export default function Login() {
             <img src={logo} alt="BAUST Tea Bar logo" className="h-full w-full object-cover" />
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground uppercase mb-1">BAUST TEA BAR</h1>
+          <Badge variant="outline" className="mb-2 bg-primary/5 text-primary border-primary/20">{portalName}</Badge>
           <p className="text-muted-foreground text-sm font-medium">Enter your credentials to access your account</p>
         </div>
 
@@ -68,9 +80,11 @@ export default function Login() {
           </Button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-muted-foreground">
-          Don't have an account? <Link to="/register" className="text-primary font-semibold hover:underline">Sign up</Link>
-        </div>
+        {type === 'staff' && (
+          <div className="mt-8 text-center text-sm text-muted-foreground">
+            Don't have an account? <Link to={`/register?type=${type}`} className="text-primary font-semibold hover:underline">Sign up</Link>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useAppState } from "@/lib/app-state";
 import { WORKING_DAYS, DayOfWeek, MenuItem, OrderItem } from "@/lib/mock-data";
 
-const ORDER_CUTOFF_HOUR = 22;
+const ORDER_CUTOFF_HOUR = 17;
 
 function getNextWorkingDays(): { date: Date; dayName: DayOfWeek; disabled: boolean }[] {
   const days: { date: Date; dayName: DayOfWeek; disabled: boolean }[] = [];
@@ -55,7 +55,7 @@ export default function Index() {
   );
 
   const addToCart = (item: MenuItem) => {
-    if (selectedDay.disabled) { toast.error("Ordering closed (past 10 PM)"); return; }
+    if (selectedDay.disabled) { toast.error("Ordering closed (past 5 PM)"); return; }
     setCart(prev => {
       const existing = prev.find(c => c.menuItem.id === item.id);
       if (existing) return prev.map(c => c.menuItem.id === item.id ? { ...c, quantity: c.quantity + 1 } : c);
@@ -92,7 +92,7 @@ export default function Index() {
           </h1>
           <p className="text-muted-foreground mt-1 font-medium text-sm md:text-base max-w-md">Secure your meals ahead of time.</p>
           <div className="inline-flex items-center gap-1.5 mt-2.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-semibold border border-amber-500/20">
-            <AlertCircle className="h-3 w-3" /> 10:00 PM cutoff for next-day
+            <AlertCircle className="h-3 w-3" /> 5:00 PM cutoff for next-day
           </div>
         </div>
 
