@@ -418,7 +418,7 @@ export default function AdminDashboard() {
     <div className="container max-w-7xl py-6 px-4 animate-in fade-in min-h-screen relative">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 print:hidden">
         <div>
-          <h1 className="font-heading text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Admin Workspace</h1>
+          <h1 className="font-heading text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{isTopManagement ? "Management Workspace" : "Admin Workspace"}</h1>
           <p className="text-muted-foreground mt-1 font-medium text-sm">Control center for operations.</p>
         </div>
         {!isTopManagement && (
