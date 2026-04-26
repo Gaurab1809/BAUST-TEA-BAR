@@ -14,7 +14,7 @@ export default function Landing() {
           Welcome to <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">BAUST Tea Bar</span>
         </h1>
         <p className="text-muted-foreground text-sm sm:text-base leading-relaxed px-4">
-          Welcome to the official digital cafeteria, designed exclusively for BAUST teachers, staff, and university management. Enjoy a seamless, lightweight experience to effortlessly secure your daily meals.
+          Welcome to the official digital cafeteria, designed exclusively for BAUST teachers, staff, and university management. Enjoy a seamless, lightweight experience to order your daily meals.
         </p>
       </div>
 

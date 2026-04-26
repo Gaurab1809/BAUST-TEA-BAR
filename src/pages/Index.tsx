@@ -88,7 +88,7 @@ export default function Index() {
         <div>
           <Badge variant="outline" className="mb-2 px-2.5 py-0.5 border-primary/20 bg-primary/5 text-primary text-[10px] uppercase font-bold tracking-wider">Welcome Back</Badge>
           <h1 className="font-heading text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent tracking-tight">
-            Hello, {user?.name}!
+            {isTopManagement ? user?.name : `Hello, ${user?.name}!`}
           </h1>
           <p className="text-muted-foreground mt-1 font-medium text-sm md:text-base max-w-md">Secure your meals ahead of time.</p>
           <div className="inline-flex items-center gap-1.5 mt-2.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-semibold border border-amber-500/20">

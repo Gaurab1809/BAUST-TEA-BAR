@@ -492,7 +492,6 @@ export default function AdminDashboard() {
                   <SelectItem value="tomorrow">Tomorrow</SelectItem>
                   <SelectItem value="yesterday">Yesterday</SelectItem>
                   <SelectItem value="week">Last 7 Days</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
                   {allOrderMonths.map(m => {
                      const date = new Date(`${m}-01`);
                      const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
