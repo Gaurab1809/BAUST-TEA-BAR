@@ -22,6 +22,7 @@ export interface MenuItem {
 export interface OrderItem {
   menuItem: MenuItem;
   quantity: number;
+  sugarOption?: "Sugar" | "No Sugar";
 }
 
 export interface Order {
@@ -32,6 +33,9 @@ export interface Order {
   total: number;
   date: string;
   dayName: DayOfWeek;
+  isSubscription?: boolean;
+  dates?: { dateIsoStr: string; dayName: DayOfWeek }[];
+  dailySchedules?: Record<string, OrderItem[]>;
   status: "pending" | "confirmed" | "cancelled" | "completed";
   createdAt: string;
 }

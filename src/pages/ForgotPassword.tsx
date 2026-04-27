@@ -31,9 +31,9 @@ export default function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none"></div>
 
-      <div className="w-full max-w-[400px] border border-border/50 shadow-2xl rounded-3xl bg-card relative z-10 p-8">
+      <div className="w-full max-w-[400px] border border-border/50 shadow-2xl rounded-3xl bg-card relative z-10 p-8 pt-10">
         
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-8 mt-2">
           <div className="rounded-full shadow-xl h-28 w-28 sm:h-32 sm:w-32 flex items-center justify-center mb-5 overflow-hidden">
             <img src={logo} alt="BAUST Tea Bar logo" className="h-full w-full object-cover" />
           </div>
@@ -62,7 +62,7 @@ export default function ForgotPassword() {
             </div>
             
             <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={loading}>
-              {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Transmit Request"}
+              {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Send Request"}
             </Button>
             
             <div className="mt-8 text-center text-sm font-medium">
@@ -72,6 +72,12 @@ export default function ForgotPassword() {
             </div>
           </form>
         )}
+
+        <div className="mt-6 pt-6 border-t border-border/40">
+          <Link to="/" className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-secondary/40 hover:bg-secondary text-secondary-foreground font-semibold text-sm transition-all border border-transparent hover:border-border shadow-sm group">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Return to Menu
+          </Link>
+        </div>
       </div>
     </div>
   );

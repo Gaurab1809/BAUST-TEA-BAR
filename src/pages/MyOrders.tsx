@@ -18,7 +18,8 @@ const statusColors: Record<string, string> = {
 
 export default function MyOrders() {
   const { user } = useAuth();
-  const { orders, cancelOrder } = useAppState();
+  const { orders: rawOrders, cancelOrder } = useAppState();
+  const orders = (Array.isArray(rawOrders) ? rawOrders : Object.values(rawOrders || {})).filter(Boolean);
   const [searchQuery, setSearchQuery] = useState("");
 
   const userOrders = user?.role === "admin" ? orders : orders.filter(o => o.userId === user?.id);

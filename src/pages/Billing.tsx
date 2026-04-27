@@ -13,7 +13,8 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Billing() {
-  const { bills } = useAppState();
+  const { bills: rawBills } = useAppState();
+  const bills = (Array.isArray(rawBills) ? rawBills : Object.values(rawBills || {})).filter(Boolean);
   const { user } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState("all");
 

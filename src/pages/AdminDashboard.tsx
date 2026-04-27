@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Users, ShoppingBag, TrendingUp, Clock, CheckCircle, XCircle, Plus, Edit, Trash2, Download, Send, Ban, ShieldCheck, ShieldOff, Upload, Image as ImageIcon, ChevronRight, Search, Printer, Filter, Pencil, Check, X } from "lucide-react";
+import { useState, useRef, useMemo, useEffect } from "react";
+import { Users, ShoppingBag, TrendingUp, Clock, CheckCircle, XCircle, Plus, Edit, Trash2, Download, Send, Ban, ShieldCheck, ShieldOff, Upload, Image as ImageIcon, ChevronRight, Search, Printer, Filter, Pencil, Check, X, CalendarDays } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,12 @@ const SearchBar = ({ val, setVal, placeholder }: { val: string, setVal: (s:strin
 );
 
 export default function AdminDashboard() {
-  const { orders, confirmOrder, rejectOrder, completeOrder, updateOrderTotal, menuItems, addMenuItem, updateMenuItem, deleteMenuItem, bills, markBillPaid, updateBillTotal, users, deleteUser, addNotification, blockUser, deleteOrder, deleteBill } = useAppState();
+  const { orders: rawOrders, confirmOrder, rejectOrder, completeOrder, updateOrderTotal, menuItems: rawMenu, addMenuItem, updateMenuItem, deleteMenuItem, bills: rawBills, markBillPaid, updateBillTotal, users: rawUsers, deleteUser, addNotification, blockUser, deleteOrder, deleteBill } = useAppState();
+  
+  const orders = (Array.isArray(rawOrders) ? rawOrders : Object.values(rawOrders || {})).filter(Boolean);
+  const bills = (Array.isArray(rawBills) ? rawBills : Object.values(rawBills || {})).filter(Boolean);
+  const menuItems = (Array.isArray(rawMenu) ? rawMenu : Object.values(rawMenu || {})).filter(Boolean);
+  const users = (Array.isArray(rawUsers) ? rawUsers : Object.values(rawUsers || {})).filter(Boolean);
   const { isTopManagement } = useAuth();
   
   // Search queries
@@ -125,11 +130,49 @@ export default function AdminDashboard() {
     return true;
   };
 
-  const filteredOrders = orders.filter(o => 
-    (orderFilter === "all" || o.status === orderFilter) &&
-    isWithinRange(o.date, orderDateFilter) &&
-    (o.userName || "").toLowerCase().includes(orderQuery.toLowerCase())
-  );
+  const filteredOrders = useMemo(() => {
+    return orders.flatMap(o => {
+      // Basic status and search filters
+      if (orderFilter !== "all" && o.status !== orderFilter) return [];
+      if (!(o.userName || "").toLowerCase().includes(orderQuery.toLowerCase())) return [];
+
+      // Dynamic Extraction for Smart Custom Schedules
+      if (o.dailySchedules) {
+        try {
+          if (orderDateFilter === "all") return [o];
+          
+          const matchedDates = Object.keys(o.dailySchedules).filter(dt => isWithinRange(dt, orderDateFilter));
+          if (matchedDates.length === 0) return []; 
+          
+          const trimmedSchedules: Record<string, typeof o.items> = {};
+          const aggregateItems: typeof o.items = [];
+          
+          matchedDates.forEach(dt => {
+             trimmedSchedules[dt] = o.dailySchedules![dt];
+             const dtItems = o.dailySchedules?.[dt];
+             const dtArray = (Array.isArray(dtItems) ? dtItems : (dtItems ? Object.values(dtItems) : [])).filter(Boolean);
+             aggregateItems.push(...dtArray);
+          });
+          
+          const trimmedTotal = aggregateItems.reduce((acc, curr) => acc + ((curr?.menuItem?.price || 0) * (curr?.quantity || 1)), 0);
+          
+          return [{
+             ...o,
+             total: trimmedTotal,
+             items: aggregateItems,
+             dailySchedules: trimmedSchedules
+          }];
+        } catch (e) {
+          console.error("Caught payload anomaly dynamically parsing:", e);
+          return [o];
+        }
+      } 
+
+      // Support for legacy single-day orders
+      if (isWithinRange(o.date, orderDateFilter)) return [o];
+      return [];
+    });
+  }, [orders, orderFilter, orderDateFilter, orderQuery]);
 
   const filteredMenu = menuItems.filter(m => 
     (menuCategory === "all" || m.category === menuCategory) &&
@@ -168,7 +211,7 @@ export default function AdminDashboard() {
   };
   const openEditMenu = (item: MenuItem) => {
     setEditingItem(item); setFormName(item.name); setFormDesc(item.description); setFormPrice(String(item.price));
-    setFormCategory(item.category); setFormDays([...item.availableDays]); setFormImage(item.image || "");
+    setFormCategory(item.category); setFormDays(Array.isArray(item.availableDays) ? [...item.availableDays] : Object.values(item.availableDays || {}).filter(Boolean)); setFormImage(item.image || "");
     setMenuDialogOpen(true);
   };
   const handleSaveMenu = () => {
@@ -211,7 +254,7 @@ export default function AdminDashboard() {
 
   const ordersExportData = orders.map(o => {
     const user = users.find(u => u.id === o.userId);
-    return { User: o.userName, Department: user?.department || '', Designation: user?.designation || '', Date: o.date, Day: o.dayName, Items: o.items.map(i => `${i.menuItem.name}×${i.quantity}`).join("; "), Total: o.total, Status: o.status };
+    return { User: o.userName, Department: user?.department || '', Designation: user?.designation || '', Date: o.date, Day: o.dayName, Items: (Array.isArray(o.items) ? o.items : Object.values(o.items || {}).filter(Boolean)).map(i => `${i?.menuItem?.name || 'Unknown'}×${i?.quantity}`).join("; "), Total: o.total, Status: o.status };
   });
   const billsExportData = bills.map(b => ({ User: b.userName, Month: b.month, Orders: b.orders, Total: b.totalAmount, Paid: b.paidAmount, Status: b.status }));
 
@@ -253,8 +296,13 @@ export default function AdminDashboard() {
               <td contentEditable suppressContentEditableWarning className="p-3 font-extrabold text-gray-900 outline-primary cursor-text whitespace-normal break-words">{order.userName}</td>
               <td contentEditable suppressContentEditableWarning className="p-3 text-gray-700 font-medium text-xs outline-primary cursor-text">{userDetail?.department || '-'}</td>
               <td contentEditable suppressContentEditableWarning className="p-3 text-gray-700 font-medium text-xs outline-primary cursor-text">{userDetail?.designation || '-'}</td>
-              <td contentEditable suppressContentEditableWarning className="p-3 text-gray-700 font-semibold text-xs outline-primary cursor-text">{getAccurateOrderDate(order.date, order.dayName).toLocaleDateString()}</td>
-              <td contentEditable suppressContentEditableWarning className="p-3 text-sm leading-relaxed text-gray-800 font-semibold outline-primary cursor-text">{order.items.map(i => `${i.menuItem.name} ×${i.quantity}`).join(', ')}</td>
+              <td contentEditable suppressContentEditableWarning className="p-3 text-gray-700 font-semibold text-xs outline-primary cursor-text">
+                {order.isSubscription && order.dates ? (() => {
+                  const datesArray = Array.isArray(order.dates) ? order.dates : Object.values(order.dates || {}).filter(Boolean);
+                  return datesArray.length > 0 ? `${new Date(datesArray[0]?.dateIsoStr || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${new Date(datesArray[datesArray.length - 1]?.dateIsoStr || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : getAccurateOrderDate(order.date, order.dayName).toLocaleDateString();
+                })() : getAccurateOrderDate(order.date, order.dayName).toLocaleDateString()}
+              </td>
+              <td contentEditable suppressContentEditableWarning className="p-3 text-sm leading-relaxed text-gray-800 font-semibold outline-primary cursor-text">{(Array.isArray(order.items) ? order.items : Object.values(order.items || {}).filter(Boolean)).map(i => `${i?.menuItem?.name || 'Item'} ×${i?.quantity}`).join(', ')}</td>
               <td contentEditable suppressContentEditableWarning className="p-3 font-black text-gray-900 border-l border-gray-200 outline-primary cursor-text">৳{order.total}</td>
               <td contentEditable suppressContentEditableWarning className="p-3 capitalize font-bold text-gray-600 border-l border-gray-200 text-xs outline-primary cursor-text">{order.status}</td>
             </tr>
@@ -423,7 +471,7 @@ export default function AdminDashboard() {
         </div>
         {!isTopManagement && (
           <Button onClick={() => setAnnouncementOpen(true)} size="sm" className="rounded-full shadow-sm bg-gradient-to-r from-blue-600 to-indigo-600 border-none px-4 h-9">
-            <Send className="h-3.5 w-3.5 mr-2" /> Broadcast
+            <Send className="h-3.5 w-3.5 mr-2" /> Announcement
           </Button>
         )}
       </div>
@@ -515,10 +563,10 @@ export default function AdminDashboard() {
               const userDetail = users.find(u => u.id === order.userId);
               
               return (
-              <Card key={order.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-border/80 hover:border-primary/30 rounded-3xl bg-card flex flex-col relative shadow-sm">
-                <div className={`absolute top-0 left-0 w-full h-1.5 ${colorBase}`}></div>
+              <Card key={order.id} className="h-full group hover:shadow-2xl transition-all duration-300 overflow-hidden border border-border/50 hover:border-primary/40 rounded-3xl bg-gradient-to-br from-card to-muted/10 flex flex-col relative shadow-md ring-1 ring-black/5 dark:ring-white/5">
+                <div className={`absolute top-0 left-0 w-full h-1.5 opacity-90 ${colorBase}`}></div>
                 
-                <CardHeader className="p-3 bg-muted/20 border-b flex flex-row items-start justify-between space-y-0 mt-1">
+                <CardHeader className="p-4 bg-transparent border-b/40 flex flex-row items-start justify-between space-y-0 mt-1.5 relative z-10">
                   <div className="flex flex-col gap-1.5 min-w-0 pr-2">
                     <CardTitle className="text-base font-extrabold whitespace-normal break-words leading-tight">{order.userName}</CardTitle>
                     {userDetail && (
@@ -526,48 +574,93 @@ export default function AdminDashboard() {
                          {userDetail.department} • {userDetail.designation}
                        </p>
                     )}
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] px-2 py-0.5 shadow-none uppercase font-bold leading-none">
-                         {order.dayName.slice(0, 3)}
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground font-semibold leading-none">
-                         {getAccurateOrderDate(order.date, order.dayName).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      {order.isSubscription && order.dates ? (() => {
+                        const datesArray = Array.isArray(order.dates) ? order.dates : Object.values(order.dates || {}).filter(Boolean);
+                        return datesArray.length > 0 ? (
+                        <div className="flex items-center gap-1.5 bg-primary/10 rounded-full px-2.5 py-1" title={datesArray.map((d: any) => new Date(d?.dateIsoStr).toLocaleDateString()).join(", ")}>
+                           <CalendarDays className="h-3 w-3 text-primary" />
+                           <span className="text-[9px] text-primary font-bold uppercase tracking-wider">
+                              {new Date(datesArray[0]?.dateIsoStr || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}  —  {new Date(datesArray[datesArray.length - 1]?.dateIsoStr || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                           </span>
+                           <span className="bg-primary text-white text-[9px] px-1.5 py-0.5 rounded-full leading-none font-bold shadow-sm">
+                             {datesArray.length} Days
+                           </span>
+                        </div>
+                        ) : null;
+                      })() : (
+                        <>
+                          <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] px-2 py-0.5 shadow-none uppercase font-bold leading-none">
+                             {order.dayName.slice(0, 3)}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground font-semibold leading-none">
+                             {getAccurateOrderDate(order.date, order.dayName).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                   <Badge variant="outline" className={`text-xs px-2.5 py-1 whitespace-nowrap shadow-sm capitalize border-2 font-bold shrink-0 mt-0.5 ${statusColors[order.status]}`}>{order.status}</Badge>
                 </CardHeader>
-                <CardContent className="p-3 flex-1 flex flex-col">
-                  <div className="text-xs font-semibold mb-4 space-y-2 flex-1 mt-1">
-                    {order.items.map((i, k) => (
-                      <div key={k} className="flex justify-between items-center bg-background border border-border/50 p-2 rounded-xl shadow-sm">
-                        <span className="text-foreground truncate mr-2 font-medium">{i.menuItem.name}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold bg-muted px-2 py-1 rounded-md text-xs border border-border/50">x{i.quantity}</span>
-                          <span className="font-bold text-primary bg-primary/5 px-2 py-1 rounded-md text-xs border border-primary/10">৳{i.menuItem.price * i.quantity}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between pt-4 border-t mt-auto">
+                <CardContent className="p-4 flex-1 flex flex-col bg-transparent">
+                  {order.dailySchedules ? (
+                    <div className="h-[140px] overflow-y-auto space-y-2.5 mb-2 mt-2 pr-2 custom-scrollbar border-b border-border/10 pb-2">
+                      {Object.entries(order.dailySchedules).sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime()).map(([dateIso, items], dateIdx) => (
+                         <div key={dateIdx} className="bg-muted/30 p-2.5 rounded-xl border border-border/40 shadow-sm transition-colors hover:bg-muted/50">
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase mb-2 px-0.5 tracking-wider">{new Date(dateIso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+                            <div className="text-[11px] font-semibold flex flex-wrap gap-1.5 content-start">
+                              {(Array.isArray(items) ? items : Object.values(items || {}).filter(Boolean)).map((i, k) => (
+                                <span key={k} className="bg-background px-2.5 py-1.5 rounded-lg shadow-sm text-foreground border border-border/60 flex flex-col items-start min-w-[80px]">
+                                  <div className="flex items-center space-x-1.5 w-full">
+                                    <span className="text-primary font-bold text-[11px] shrink-0 leading-none">{i?.quantity}x</span>
+                                    <span className="truncate max-w-[130px] font-semibold text-[11px] leading-none mb-0.5">{i?.menuItem?.name || 'Unknown'}</span>
+                                  </div>
+                                  {i?.sugarOption && (
+                                     <span className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase leading-none font-extrabold tracking-tight ms-4 mt-0.5">
+                                       {i.sugarOption}
+                                     </span>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                         </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-[11px] font-semibold mb-3 flex-1 mt-2.5 flex flex-wrap gap-2 content-start h-[140px] overflow-y-auto custom-scrollbar pr-1 border-b border-border/10 pb-2">
+                      {(Array.isArray(order.items) ? order.items : Object.values(order.items || {}).filter(Boolean)).map((i, k) => (
+                        <span key={k} className="bg-secondary/40 px-2.5 py-1.5 rounded-xl text-secondary-foreground border border-border/50 shadow-sm flex flex-col transition-colors hover:bg-secondary/60 min-w-[80px]">
+                          <div className="flex items-center space-x-1.5 w-full">
+                            <span className="opacity-90 font-bold text-[11px] shrink-0 leading-none">{i?.quantity}x</span>
+                            <span className="truncate max-w-[130px] font-semibold text-[11px] leading-none mb-0.5">{i?.menuItem?.name || 'Unknown'}</span>
+                          </div>
+                          {i?.sugarOption && (
+                             <span className="text-[8px] bg-secondary-foreground/10 text-secondary-foreground px-1.5 py-0.5 rounded uppercase leading-none font-extrabold tracking-tight ms-4 mt-0.5">
+                               {i.sugarOption}
+                             </span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-4 border-t/40 mt-auto bg-muted/5 -mx-4 -mb-4 p-4 rounded-b-3xl">
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-2 bg-primary/10 px-3.5 py-2 rounded-xl border border-primary/20 shadow-sm hover:bg-primary/20 transition-colors">
+                      <div className="flex items-center gap-2 bg-primary/10 px-3.5 py-2.5 rounded-xl border border-primary/20 shadow-sm hover:bg-primary/20 transition-colors">
                             <span className="font-black text-sm text-primary tracking-tight">৳{order.total}</span>
-                            
                          </div>
                     </div>
                     <div className="flex gap-2">
                       {!isTopManagement && order.status === "pending" && (
                         <>
-                          <Button size="icon" variant="outline" className="h-9 w-9 rounded-full text-emerald-600 hover:bg-emerald-600 hover:text-white border-emerald-600/30 shadow-sm transition-colors" onClick={() => confirmOrder(order.id)}><CheckCircle className="h-5 w-5" /></Button>
-                          <Button size="icon" variant="outline" className="h-9 w-9 rounded-full text-rose-600 hover:bg-rose-600 hover:text-white border-rose-600/30 shadow-sm transition-colors" onClick={() => rejectOrder(order.id)}><XCircle className="h-5 w-5" /></Button>
+                          <Button size="icon" variant="outline" className="h-10 w-10 rounded-full text-emerald-600 hover:bg-emerald-600 hover:text-white border-emerald-600/30 shadow-sm transition-colors" onClick={() => confirmOrder(order.id)}><CheckCircle className="h-5 w-5" /></Button>
+                          <Button size="icon" variant="outline" className="h-10 w-10 rounded-full text-rose-600 hover:bg-rose-600 hover:text-white border-rose-600/30 shadow-sm transition-colors" onClick={() => rejectOrder(order.id)}><XCircle className="h-5 w-5" /></Button>
                         </>
                       )}
                       {!isTopManagement && order.status === "confirmed" && (
-                        <Button size="sm" className="h-9 font-bold px-5 text-sm rounded-full bg-primary/10 hover:bg-primary/20 text-primary shadow-sm border border-primary/20" onClick={() => completeOrder(order.id)}>Complete</Button>
+                        <Button size="sm" className="h-10 font-bold px-6 text-sm rounded-full bg-primary/10 hover:bg-primary/20 text-primary shadow-sm border border-primary/20 transition-all" onClick={() => completeOrder(order.id)}>Complete</Button>
                       )}
                       {!isTopManagement && (
-                        <Button size="icon" variant="outline" className="h-9 w-9 rounded-full text-red-600 hover:bg-red-600 hover:text-white border-red-600/30 shadow-sm transition-colors shrink-0" onClick={() => setOrderToDelete(order.id)} title="Delete Order"><Trash2 className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="outline" className="h-10 w-10 rounded-full text-red-600 hover:bg-red-600 hover:text-white border-red-600/30 shadow-sm transition-colors shrink-0" onClick={() => setOrderToDelete(order.id)} title="Delete Order"><Trash2 className="h-4 w-4" /></Button>
                       )}
                     </div>
                   </div>
@@ -638,7 +731,7 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between mb-2">
                     <Badge variant="secondary" className="px-1.5 text-[9px] uppercase">{item.category}</Badge>
                     <div className="flex -space-x-1">
-                      {item.availableDays.map((d, i) => (
+                      {(Array.isArray(item.availableDays) ? item.availableDays : Object.values(item.availableDays || {}).filter(Boolean)).map((d: any, i: number) => (
                         <div key={i} className="w-4 h-4 rounded-full bg-muted border border-card flex items-center justify-center text-[8px] font-bold" title={d}>{d[0]}</div>
                       ))}
                     </div>
@@ -918,7 +1011,7 @@ export default function AdminDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={announcementOpen} onOpenChange={setAnnouncementOpen}><DialogContent className="max-w-sm rounded-[1.5rem] p-5"><DialogHeader className="mb-2"><DialogTitle>Broadcast</DialogTitle></DialogHeader><Textarea value={announcementText} onChange={e => setAnnouncementText(e.target.value)} placeholder="Message..." rows={4} className="text-sm bg-muted/30 resize-none" /><DialogFooter className="mt-4"><Button onClick={handleSendAnnouncement} size="sm" className="w-full h-10 rounded-xl shadow-sm">Send</Button></DialogFooter></DialogContent></Dialog>
+      <Dialog open={announcementOpen} onOpenChange={setAnnouncementOpen}><DialogContent className="max-w-sm rounded-[1.5rem] p-5"><DialogHeader className="mb-2"><DialogTitle>Announcement</DialogTitle></DialogHeader><Textarea value={announcementText} onChange={e => setAnnouncementText(e.target.value)} placeholder="Message..." rows={4} className="text-sm bg-muted/30 resize-none" /><DialogFooter className="mt-4"><Button onClick={handleSendAnnouncement} size="sm" className="w-full h-10 rounded-xl shadow-sm">Send</Button></DialogFooter></DialogContent></Dialog>
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}><DialogContent className="max-w-xs rounded-2xl p-5 text-center"><DialogTitle className="text-base mb-3">Delete Menu Item?</DialogTitle><div className="flex gap-2"><Button variant="outline" className="flex-1 h-9 rounded-xl" onClick={() => setDeleteConfirm(null)}>Cancel</Button><Button variant="destructive" className="flex-1 h-9 rounded-xl" onClick={() => deleteConfirm && handleDeleteMenu(deleteConfirm)}>Confirm</Button></div></DialogContent></Dialog>
       <Dialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}><DialogContent className="max-w-md rounded-2xl p-6 text-center"><DialogHeader><DialogTitle className="text-xl mb-2 text-red-600">Delete User & All History?</DialogTitle><DialogDescription className="text-sm">This action is irreversible. The user's account, their orders, and their billing history will be completely wiped from the database. They will not be able to log in with this account again.</DialogDescription></DialogHeader><div className="flex gap-3 mt-4"><Button variant="outline" className="flex-1 h-10 rounded-xl font-bold" onClick={() => setUserToDelete(null)}>Cancel</Button><Button variant="destructive" className="flex-1 h-10 rounded-xl font-bold" onClick={() => userToDelete && handleDeleteUser(userToDelete)}>Yes, Delete User Data</Button></div></DialogContent></Dialog>
       <Dialog open={!!orderToDelete} onOpenChange={() => setOrderToDelete(null)}><DialogContent className="max-w-xs rounded-2xl p-5 text-center"><DialogTitle className="text-base mb-3 text-red-600">Delete Order Permanently?</DialogTitle><div className="flex gap-2"><Button variant="outline" className="flex-1 h-9 rounded-xl font-bold" onClick={() => setOrderToDelete(null)}>Cancel</Button><Button variant="destructive" className="flex-1 h-9 rounded-xl font-bold" onClick={() => orderToDelete && handleDeleteOrder(orderToDelete)}>Delete</Button></div></DialogContent></Dialog>

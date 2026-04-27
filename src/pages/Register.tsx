@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-import { Coffee, UserPlus } from "lucide-react";
+import { ArrowLeft, Coffee, UserPlus } from "lucide-react";
 import logo from "@/assets/logo-new.jpg";
 
 const DEPARTMENTS = ["CSE", "EEE", "ICT", "ME", "IPE", "CE", "DBA", "AIS", "English", "Department of Arts and Sciences (Bangla, English, Physics, Math, Chemistry, Sociology)", "ICT Wing & Archive", "Vice Chancellor's Office", "Office of the Treasurer", "Office of the Registrar", "Controller of Examination", "Admission Office", "Library Office"];
@@ -44,9 +44,9 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none"></div>
 
-      <div className="w-full max-w-[500px] border border-border/50 shadow-2xl rounded-[2rem] bg-card/95 backdrop-blur-xl relative z-10 p-6 sm:p-10">
+      <div className="w-full max-w-[500px] border border-border/50 shadow-2xl rounded-[2rem] bg-card/95 backdrop-blur-xl relative z-10 p-6 sm:p-10 pt-10">
         
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-8 mt-2">
           <div className="rounded-full shadow-xl h-28 w-28 sm:h-32 sm:w-32 flex items-center justify-center mb-5 overflow-hidden">
             <img src={logo} alt="BAUST Tea Bar logo" className="h-full w-full object-cover" />
           </div>
@@ -100,7 +100,13 @@ export default function Register() {
         </form>
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
-          Already have an account? <Link to="/login?type=staff" className="text-primary font-semibold hover:underline">Sign in</Link>
+          Already have an account? <Link to="/login?type=staff" className="text-primary font-semibold hover:underline border-b border-transparent hover:border-primary pb-0.5 transition-all">Sign in</Link>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-border/40">
+          <Link to="/" className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-secondary/40 hover:bg-secondary text-secondary-foreground font-semibold text-sm transition-all border border-transparent hover:border-border shadow-sm group">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Return to Menu
+          </Link>
         </div>
       </div>
     </div>

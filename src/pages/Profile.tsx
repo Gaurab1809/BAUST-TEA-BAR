@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Profile() {
   const { user, updateProfile } = useAuth();
-  const { orders } = useAppState();
+  const { orders: rawOrders } = useAppState();
+  const orders = (Array.isArray(rawOrders) ? rawOrders : Object.values(rawOrders || {})).filter(Boolean);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState(user?.name ?? "");

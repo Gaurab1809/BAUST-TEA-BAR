@@ -14,6 +14,7 @@ interface AppState {
   // Orders
   orders: Order[];
   placeOrder: (userId: string, userName: string, items: OrderItem[], date: string, dayName: DayOfWeek) => void;
+  placeMultiDayOrder: (userId: string, userName: string, totalCountPerItemAndDays: OrderItem[], dates: {date: string; dayName: DayOfWeek}[], dailySchedules: Record<string, OrderItem[]>, totalGlobalPrice: number) => Promise<void>;
   cancelOrder: (orderId: string) => void;
   confirmOrder: (orderId: string) => void;
   rejectOrder: (orderId: string) => void;
@@ -179,6 +180,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   };
 
   // -- ORDERS --
+
   const placeOrder = useCallback(async (userId: string, userName: string, items: OrderItem[], date: string, dayName: DayOfWeek) => {
     const total = items.reduce((s, i) => s + i.menuItem.price * i.quantity, 0);
     const orderRef = doc(collection(db, "orders"));
@@ -194,6 +196,39 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     await updateMonthlyBill(userId, userName, total, date, false);
 
     addNotification({ title: "Order Placed", message: `Your order for ${dayName} (৳${total}) has been placed.`, type: "order", targetUserId: userId, read: false });
+  }, [addNotification]);
+
+  const placeMultiDayOrder = useCallback(async (userId: string, userName: string, totalCountPerItemAndDays: OrderItem[], dates: {date: string, dayName: DayOfWeek}[], dailySchedules: Record<string, OrderItem[]>, totalGlobalPrice: number) => {
+    if (dates.length === 0) return;
+    
+    // Use the very first date as the primary anchor date for sorting/filtering
+    const primaryDate = dates[0].date;
+    const primaryDayName = dates[0].dayName;
+    
+    const orderRef = doc(collection(db, "orders"));
+    
+    const p1 = setDoc(orderRef, {
+      id: orderRef.id,
+      userId, userName, items: totalCountPerItemAndDays, total: totalGlobalPrice, 
+      date: primaryDate, 
+      dayName: primaryDayName,
+      isSubscription: dates.length > 1,
+      dates: dates.length > 1 ? dates.map(d => ({ dateIsoStr: d.date, dayName: d.dayName })) : null,
+      dailySchedules,
+      status: "pending", 
+      createdAt: new Date().toISOString()
+    });
+
+    // Send the massive bulk total heavily hitting the bill for this primary month
+    const p2 = updateMonthlyBill(userId, userName, totalGlobalPrice, primaryDate, false);
+
+    await Promise.all([p1, p2]);
+
+    addNotification({ 
+      title: "Order Placed", 
+      message: dates.length > 1 ? `Your ${dates.length}-day order schedule (৳${totalGlobalPrice}) has been successfully placed.` : `Your order for ${primaryDayName} (৳${totalGlobalPrice}) has been placed.`, 
+      type: "order", targetUserId: userId, read: false 
+    });
   }, [addNotification]);
 
   const cancelOrder = useCallback(async (orderId: string) => {
@@ -320,7 +355,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   return (
     <AppStateContext.Provider value={{
       menuItems, addMenuItem, updateMenuItem, deleteMenuItem,
-      orders, placeOrder, cancelOrder, confirmOrder, rejectOrder, completeOrder, updateOrderTotal,
+      orders, placeOrder, placeMultiDayOrder, cancelOrder, confirmOrder, rejectOrder, completeOrder, updateOrderTotal,
       bills, markBillPaid, markBillPartial, updateBillTotal,
       notifications, markNotificationRead, markAllNotificationsRead, addNotification,
       users, addUser, deleteUser, updateUser, blockUser,

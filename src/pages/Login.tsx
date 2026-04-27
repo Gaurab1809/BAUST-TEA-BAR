@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Eye, EyeOff, Coffee, LogIn } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Coffee, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -45,9 +45,9 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none"></div>
       
-      <div className="w-full max-w-[400px] border border-border/50 shadow-2xl rounded-[2rem] bg-card/95 backdrop-blur-xl relative z-10 p-6 sm:p-8">
-        
-        <div className="flex flex-col items-center mb-8">
+      <div className="w-full max-w-[400px] border border-border/50 shadow-2xl rounded-[2rem] bg-card/95 backdrop-blur-xl relative z-10 p-6 sm:p-8 pt-10">
+
+        <div className="flex flex-col items-center mb-8 mt-2">
           <div className="rounded-full shadow-2xl h-36 w-36 sm:h-40 sm:w-40 flex items-center justify-center mb-6 overflow-hidden">
             <img src={logo} alt="BAUST Tea Bar logo" className="h-full w-full object-cover" />
           </div>
@@ -82,9 +82,15 @@ export default function Login() {
 
         {type === 'staff' && (
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            Don't have an account? <Link to={`/register?type=${type}`} className="text-primary font-semibold hover:underline">Sign up</Link>
+            Don't have an account? <Link to={`/register?type=${type}`} className="text-primary font-semibold hover:underline border-b border-transparent hover:border-primary pb-0.5 transition-all">Sign up</Link>
           </div>
         )}
+
+        <div className="mt-6 pt-6 border-t border-border/40">
+          <Link to="/" className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-secondary/40 hover:bg-secondary text-secondary-foreground font-semibold text-sm transition-all border border-transparent hover:border-border shadow-sm group">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Return to Menu
+          </Link>
+        </div>
       </div>
     </div>
   );

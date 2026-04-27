@@ -29,7 +29,8 @@ function getNextWorkingDays(): { date: Date; dayName: DayOfWeek; disabled: boole
 
 export default function OrderPage() {
   const { user } = useAuth();
-  const { menuItems, placeOrder, users } = useAppState();
+  const { menuItems: rawMenu, placeOrder, users } = useAppState();
+  const menuItems = (Array.isArray(rawMenu) ? rawMenu : Object.values(rawMenu || {})).filter(Boolean);
 
   const appUser = users.find(u => u.id === user?.id);
   const isBlocked = appUser?.blocked === "ordering" || appUser?.blocked === "full";

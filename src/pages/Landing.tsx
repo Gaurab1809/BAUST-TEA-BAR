@@ -6,15 +6,16 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       {/* Brand Header */}
-      <div className="text-center mb-10 max-w-lg mx-auto animate-in fade-in zoom-in duration-500">
-        <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-6 rounded-full overflow-hidden shadow-2xl border-4 border-background ring-4 ring-primary/20">
+      <div className="flex flex-col items-center mb-10 sm:mb-14 text-center mt-8 sm:mt-12 animate-in fade-in slide-in-from-top-8 duration-700">
+        <div className="w-32 h-32 sm:w-40 sm:h-40 mx-auto mb-6 rounded-full overflow-hidden shadow-2xl border-4 border-background ring-4 ring-primary/20">
           <img src={logo} alt="BAUST Tea Bar Logo" className="w-full h-full object-cover" />
         </div>
-        <h1 className="text-3xl sm:text-5xl font-extrabold font-heading mb-3 tracking-tight text-foreground">
-          Welcome to <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">BAUST Tea Bar</span>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold font-heading mb-6 tracking-tight text-foreground flex flex-col items-center gap-2 sm:gap-3 px-2">
+          <span className="opacity-90">Welcome to</span>
+          <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent pb-2 mt-1">BAUST Tea Bar</span>
         </h1>
-        <p className="text-muted-foreground text-sm sm:text-base leading-relaxed px-4">
-          Welcome to the official digital cafeteria, designed exclusively for BAUST teachers, staff, and university management. Enjoy a seamless, lightweight experience to order your daily meals.
+        <p className="text-muted-foreground text-sm sm:text-base leading-relaxed px-4 max-w-2xl">
+          Welcome to the official digital cafeteria, designed exclusively for BAUST teachers, staff, and university management.
         </p>
       </div>
 

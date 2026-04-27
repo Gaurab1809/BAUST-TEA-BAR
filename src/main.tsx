@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
+import { GlobalErrorBoundary } from "./ErrorBoundary.tsx";
 import "./index.css";
 
 // Persist dark mode preference
@@ -8,4 +9,4 @@ if (stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: d
   document.documentElement.classList.add("dark");
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(<GlobalErrorBoundary><App /></GlobalErrorBoundary>);

@@ -42,7 +42,7 @@ export function Navbar() {
   if (!isAuthenticated) return null;
 
   const navLinks = [
-    { to: "/", label: "Home" },
+    { to: "/", label: "Order" },
     { to: "/my-orders", label: "My Orders" },
     { to: "/billing", label: "Billing" },
     ...(isAdmin || isTopManagement ? [{ to: "/admin", label: isAdmin ? "Admin" : "Management" }] : []),
@@ -113,9 +113,9 @@ export function Navbar() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="hidden md:flex text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-2 ml-1">
-            <LogOut className="h-4 w-4" />
-            <span className="text-sm font-medium">Logout</span>
+          <Button variant="outline" size="sm" onClick={handleLogout} className="hidden md:flex bg-destructive/10 text-destructive border-transparent hover:bg-destructive hover:text-white rounded-xl px-4 h-9 shadow-sm transition-all items-center gap-1.5 group ml-2">
+            <span className="text-sm font-extrabold tracking-tight">Logout</span>
+            <LogOut className="h-4 w-4 group-hover:translate-x-1 group-hover:scale-105 transition-all duration-300" />
           </Button>
 
           <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 ml-1" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -144,10 +144,10 @@ export function Navbar() {
                 setMobileOpen(false);
                 handleLogout();
               }}
-              className="mt-2 flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 transition-all duration-200 active:scale-[0.98] select-none touch-manipulation text-left"
+              className="mt-2 flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-extrabold text-destructive border border-transparent bg-destructive/10 hover:bg-destructive hover:text-white transition-all duration-300 active:scale-[0.98] select-none touch-manipulation text-left group shadow-sm w-fit"
             >
-              <LogOut className="h-4 w-4" />
-              Logout
+              <LogOut className="h-4 w-4 group-hover:-translate-x-1 group-hover:scale-110 transition-all duration-300" />
+              <span className="tracking-tight">Logout</span>
             </button>
           </div>
         </div>
