@@ -552,7 +552,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 print:hidden">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 print:hidden">
             {filteredOrders.length === 0 && <p className="text-muted-foreground text-sm col-span-full ml-2">No orders matched search criteria.</p>}
             {filteredOrders.map(order => {
               // Extract the base color for the top border
@@ -570,11 +570,16 @@ export default function AdminDashboard() {
                   <div className="flex flex-col gap-1.5 min-w-0 pr-2">
                     <CardTitle className="text-base font-extrabold whitespace-normal break-words leading-tight">{order.userName}</CardTitle>
                     {userDetail && (
-                       <p className="text-[10px] text-muted-foreground font-semibold uppercase leading-none mt-0.5 line-clamp-1">
-                         {userDetail.department} • {userDetail.designation}
-                       </p>
+                       <div className="flex flex-col gap-1 mt-0.5">
+                         <p className="text-[10px] text-muted-foreground font-semibold uppercase leading-none line-clamp-1">
+                           {userDetail.department} • {userDetail.designation}
+                         </p>
+                         <p className="text-[9px] text-muted-foreground/80 font-bold tracking-tight lowercase">
+                           {userDetail.phone} <span className="opacity-50 mx-1">•</span> {userDetail.email}
+                         </p>
+                       </div>
                     )}
-                    <div className="flex items-center gap-1.5 mt-1.5">
+                    <div className="flex items-center gap-1.5 mt-1">
                       {order.isSubscription && order.dates ? (() => {
                         const datesArray = Array.isArray(order.dates) ? order.dates : Object.values(order.dates || {}).filter(Boolean);
                         return datesArray.length > 0 ? (
