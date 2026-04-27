@@ -610,13 +610,11 @@ export default function AdminDashboard() {
                             <p className="text-[9px] font-bold text-muted-foreground uppercase mb-2 px-0.5 tracking-wider">{new Date(dateIso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
                             <div className="text-[11px] font-semibold flex flex-wrap gap-1.5 content-start">
                               {(Array.isArray(items) ? items : Object.values(items || {}).filter(Boolean)).map((i, k) => (
-                                <span key={k} className="bg-background px-2.5 py-1.5 rounded-lg shadow-sm text-foreground border border-border/60 flex flex-col items-start min-w-[80px]">
-                                  <div className="flex items-center space-x-1.5 w-full">
-                                    <span className="text-primary font-bold text-[11px] shrink-0 leading-none">{i?.quantity}x</span>
-                                    <span className="truncate max-w-[130px] font-semibold text-[11px] leading-none mb-0.5">{i?.menuItem?.name || 'Unknown'}</span>
-                                  </div>
+                                <span key={k} className="bg-background px-2 py-1.5 rounded border border-border/60 flex items-center gap-1 w-fit max-w-full shadow-sm">
+                                  <span className="text-primary font-bold text-[11px] shrink-0 leading-none">{i?.quantity}x</span>
+                                  <span className="truncate font-semibold text-[11px] text-foreground leading-none">{i?.menuItem?.name || 'Unknown'}</span>
                                   {i?.sugarOption && (
-                                     <span className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase leading-none font-extrabold tracking-tight ms-4 mt-0.5">
+                                     <span className="text-[8px] bg-primary/10 text-primary px-1 rounded uppercase font-extrabold tracking-tight shrink-0 ml-1 leading-none py-0.5">
                                        {i.sugarOption}
                                      </span>
                                   )}
@@ -629,13 +627,11 @@ export default function AdminDashboard() {
                   ) : (
                     <div className="text-[11px] font-semibold mb-3 flex-1 mt-2.5 flex flex-wrap gap-2 content-start h-[140px] overflow-y-auto custom-scrollbar pr-1 border-b border-border/10 pb-2">
                       {(Array.isArray(order.items) ? order.items : Object.values(order.items || {}).filter(Boolean)).map((i, k) => (
-                        <span key={k} className="bg-secondary/40 px-2.5 py-1.5 rounded-xl text-secondary-foreground border border-border/50 shadow-sm flex flex-col transition-colors hover:bg-secondary/60 min-w-[80px]">
-                          <div className="flex items-center space-x-1.5 w-full">
-                            <span className="opacity-90 font-bold text-[11px] shrink-0 leading-none">{i?.quantity}x</span>
-                            <span className="truncate max-w-[130px] font-semibold text-[11px] leading-none mb-0.5">{i?.menuItem?.name || 'Unknown'}</span>
-                          </div>
+                        <span key={k} className="bg-secondary/40 px-2 py-1.5 rounded shadow-sm border border-border/50 flex items-center gap-1 w-fit max-w-full transition-colors hover:bg-secondary/60">
+                          <span className="opacity-90 font-bold text-[11px] shrink-0 leading-none">{i?.quantity}x</span>
+                          <span className="truncate font-semibold text-[11px] text-secondary-foreground leading-none">{i?.menuItem?.name || 'Unknown'}</span>
                           {i?.sugarOption && (
-                             <span className="text-[8px] bg-secondary-foreground/10 text-secondary-foreground px-1.5 py-0.5 rounded uppercase leading-none font-extrabold tracking-tight ms-4 mt-0.5">
+                             <span className="text-[8px] bg-secondary-foreground/10 text-secondary-foreground px-1 rounded uppercase font-extrabold tracking-tight shrink-0 ml-1 leading-none py-0.5">
                                {i.sugarOption}
                              </span>
                           )}
