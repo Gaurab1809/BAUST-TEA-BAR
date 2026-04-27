@@ -566,8 +566,8 @@ export default function AdminDashboard() {
               <Card key={order.id} className="h-full group hover:shadow-2xl transition-all duration-300 overflow-hidden border border-border/50 hover:border-primary/40 rounded-3xl bg-gradient-to-br from-card to-muted/10 flex flex-col relative shadow-md ring-1 ring-black/5 dark:ring-white/5">
                 <div className={`absolute top-0 left-0 w-full h-1.5 opacity-90 ${colorBase}`}></div>
                 
-                <CardHeader className="p-4 bg-transparent border-b/40 flex flex-row items-start justify-between space-y-0 mt-1.5 relative z-10">
-                  <div className="flex flex-col gap-1.5 min-w-0 pr-2">
+                <CardHeader className="p-3.5 bg-transparent border-b/40 flex flex-row items-start justify-between space-y-0 mt-1 relative z-10">
+                  <div className="flex flex-col gap-1 min-w-0 pr-2">
                     <CardTitle className="text-base font-extrabold whitespace-normal break-words leading-tight">{order.userName}</CardTitle>
                     {userDetail && (
                        <div className="flex flex-col gap-1 mt-0.5">
@@ -607,13 +607,13 @@ export default function AdminDashboard() {
                   </div>
                   <Badge variant="outline" className={`text-xs px-2.5 py-1 whitespace-nowrap shadow-sm capitalize border-2 font-bold shrink-0 mt-0.5 ${statusColors[order.status]}`}>{order.status}</Badge>
                 </CardHeader>
-                <CardContent className="p-4 flex-1 flex flex-col bg-transparent">
+                <CardContent className="p-3.5 flex-1 flex flex-col bg-transparent">
                   {order.dailySchedules ? (
-                    <div className="h-[140px] overflow-y-auto space-y-2.5 mb-2 mt-2 pr-2 custom-scrollbar border-b border-border/10 pb-2">
+                    <div className="h-[110px] overflow-y-auto space-y-2 mb-2 mt-1.5 pr-1.5 custom-scrollbar border-b border-border/10 pb-1.5">
                       {Object.entries(order.dailySchedules).sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime()).map(([dateIso, items], dateIdx) => (
                          <div key={dateIdx} className="bg-muted/30 p-2.5 rounded-xl border border-border/40 shadow-sm transition-colors hover:bg-muted/50">
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase mb-2 px-0.5 tracking-wider">{new Date(dateIso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
-                            <div className="text-[11px] font-semibold flex flex-wrap gap-1.5 content-start">
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase mb-1.5 px-0.5 tracking-wider">{new Date(dateIso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+                            <div className="text-[11px] font-semibold flex flex-wrap gap-1 content-start">
                               {(Array.isArray(items) ? items : Object.values(items || {}).filter(Boolean)).map((i, k) => (
                                 <span key={k} className="bg-background px-2 py-1.5 rounded border border-border/60 flex items-center gap-1 w-fit max-w-full shadow-sm">
                                   <span className="text-primary font-bold text-[11px] shrink-0 leading-none">{i?.quantity}x</span>
@@ -630,7 +630,7 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-[11px] font-semibold mb-3 flex-1 mt-2.5 flex flex-wrap gap-2 content-start h-[140px] overflow-y-auto custom-scrollbar pr-1 border-b border-border/10 pb-2">
+                    <div className="text-[11px] font-semibold mb-2 flex-1 mt-2 flex flex-wrap gap-1.5 content-start h-[110px] overflow-y-auto custom-scrollbar pr-1 border-b border-border/10 pb-1.5">
                       {(Array.isArray(order.items) ? order.items : Object.values(order.items || {}).filter(Boolean)).map((i, k) => (
                         <span key={k} className="bg-secondary/40 px-2 py-1.5 rounded shadow-sm border border-border/50 flex items-center gap-1 w-fit max-w-full transition-colors hover:bg-secondary/60">
                           <span className="opacity-90 font-bold text-[11px] shrink-0 leading-none">{i?.quantity}x</span>
@@ -644,7 +644,7 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   )}
-                  <div className="flex items-center justify-between pt-4 border-t/40 mt-auto bg-muted/5 -mx-4 -mb-4 p-4 rounded-b-3xl">
+                  <div className="flex items-center justify-between pt-3.5 border-t/40 mt-auto bg-muted/5 -mx-3.5 -mb-3.5 p-3.5 rounded-b-3xl">
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-2 bg-primary/10 px-3.5 py-2.5 rounded-xl border border-primary/20 shadow-sm hover:bg-primary/20 transition-colors">
                             <span className="font-black text-sm text-primary tracking-tight">৳{order.total}</span>
