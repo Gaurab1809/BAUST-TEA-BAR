@@ -609,7 +609,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent className="p-3.5 flex-1 flex flex-col bg-transparent">
                   {order.dailySchedules ? (
-                    <div className="h-[110px] overflow-y-auto space-y-2 mb-2 mt-1.5 pr-1.5 custom-scrollbar border-b border-border/10 pb-1.5">
+                    <div className="space-y-2 mb-2 mt-1.5 pr-1.5 border-b border-border/10 pb-1.5">
                       {Object.entries(order.dailySchedules).sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime()).map(([dateIso, items], dateIdx) => (
                          <div key={dateIdx} className="bg-muted/30 p-2.5 rounded-xl border border-border/40 shadow-sm transition-colors hover:bg-muted/50">
                             <p className="text-[9px] font-bold text-muted-foreground uppercase mb-1.5 px-0.5 tracking-wider">{new Date(dateIso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
@@ -630,7 +630,7 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-[11px] font-semibold mb-2 flex-1 mt-2 flex flex-wrap gap-1.5 content-start h-[110px] overflow-y-auto custom-scrollbar pr-1 border-b border-border/10 pb-1.5">
+                    <div className="text-[11px] font-semibold mb-2 flex-1 mt-2 flex flex-wrap gap-1.5 content-start pr-1 border-b border-border/10 pb-1.5">
                       {(Array.isArray(order.items) ? order.items : Object.values(order.items || {}).filter(Boolean)).map((i, k) => (
                         <span key={k} className="bg-secondary/40 px-2 py-1.5 rounded shadow-sm border border-border/50 flex items-center gap-1 w-fit max-w-full transition-colors hover:bg-secondary/60">
                           <span className="opacity-90 font-bold text-[11px] shrink-0 leading-none">{i?.quantity}x</span>
