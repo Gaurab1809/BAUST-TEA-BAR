@@ -22,7 +22,7 @@
 
 <p align="center">
   <a href="https://baust-tea-bar-psi.vercel.app" target="_blank">
-    <img src="https://img.shields.io/badge/🌐%20Live%20Demo-baust--tea--bar--psi.vercel.app-brightgreen?style=for-the-badge">
+    <img src="https://img.shields.io/badge/🌐%20Live%20Demo-baust--tea--bar--steel.vercel.app-brightgreen?style=for-the-badge">
   </a>
   <a href="https://github.com/Gaurab1809/BAUST-TEA-BAR">
     <img src="https://img.shields.io/github/stars/Gaurab1809/BAUST-TEA-BAR?style=for-the-badge&logo=github">
