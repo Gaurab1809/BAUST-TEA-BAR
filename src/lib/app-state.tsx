@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, ReactNode, useEffect 
 import { MenuItem, Order, OrderItem, MonthlyBill, Notification, DayOfWeek, User, MENU_ITEMS as INITIAL_MENU } from "./mock-data";
 import { db, auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, updateDoc, getDocs, getDoc, increment, writeBatch, query, orderBy, limit } from "firebase/firestore";
+import { collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, updateDoc, getDocs, getDoc, increment, writeBatch, query, orderBy, limit, where } from "firebase/firestore";
 
 interface AppState {
   // Menu
