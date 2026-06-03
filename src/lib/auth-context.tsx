@@ -25,7 +25,7 @@ interface AuthContextType {
   user: User | null;
   isAdmin: boolean;
   isTopManagement: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   register: (data: RegisterData) => Promise<{ success: boolean; message?: string }>;
   sendPasswordReset: (email: string) => Promise<{ success: boolean; message: string; resetCode?: string }>;
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [users, addUser]);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const userDocRef = doc(db, "users", userCredential.user.uid);
@@ -100,12 +100,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!users.find(u => u.id === userData.id)) {
           addUser(userData);
         }
-        return true;
+        return { success: true };
       }
-      return false;
-    } catch (e) {
-      console.error(e);
-      return false;
+      return { success: false, error: "Your account data was not found. Please contact the admin or register again." };
+    } catch (e: any) {
+      console.error("Login error:", e);
+      const code = e?.code || "";
+      if (code === "auth/user-not-found" || code === "auth/invalid-credential") {
+        return { success: false, error: "Invalid email or password." };
+      } else if (code === "auth/wrong-password") {
+        return { success: false, error: "Incorrect password." };
+      } else if (code === "auth/user-disabled") {
+        return { success: false, error: "This account has been disabled." };
+      } else if (code === "auth/too-many-requests") {
+        return { success: false, error: "Too many failed attempts. Please try again later." };
+      } else if (code === "auth/network-request-failed") {
+        return { success: false, error: "Network error. Please check your internet connection." };
+      } else if (code === "auth/invalid-api-key") {
+        return { success: false, error: "Firebase configuration error (invalid API key). Please contact the admin." };
+      } else if (code === "auth/api-key-not-valid.-please-pass-a-valid-api-key.") {
+        return { success: false, error: "Firebase API key is invalid or expired. Please contact the admin." };
+      }
+      return { success: false, error: e?.message || "Authentication failed. Please try again." };
     }
   }, [users, addUser]);
 

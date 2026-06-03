@@ -31,13 +31,13 @@ export default function Login() {
     e.preventDefault();
     if (!email || !password) { toast.error("Please fill all fields"); return; }
     setLoading(true);
-    const success = await login(email, password);
+    const result = await login(email, password);
     setLoading(false);
-    if (success) {
+    if (result.success) {
       toast.success("Welcome back!");
       navigate("/");
     } else {
-      toast.error("Authentication failed.");
+      toast.error(result.error || "Authentication failed.");
     }
   };
 
